@@ -79,7 +79,7 @@ Runs on [http://localhost:3000](http://localhost:3000) by default.
 
 📸 **Screenshots**
 
-*(Add screenshots of your UI: Dashboard, Supplier List, Product List, Sell Function, etc.)*
+
 
 ---
 
