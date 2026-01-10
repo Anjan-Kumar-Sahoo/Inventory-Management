@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Minus, X, IndianRupee, CheckCircle, AlertCircle } from 'lucide-react';
+import { useInventory } from '../context/InventoryContext';
 
 interface SaleProduct {
   id: number;
@@ -19,7 +20,7 @@ interface SelectedSaleProduct {
 }
 
 const SellProduct: React.FC = () => {
-  const [products, setProducts] = useState<SaleProduct[]>([]);
+  const { products: contextProducts, updateProductsStock } = useInventory();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<SelectedSaleProduct[]>([]);
   const [totalBill, setTotalBill] = useState(0);
@@ -27,12 +28,14 @@ const SellProduct: React.FC = () => {
   const [showProfitModal, setShowProfitModal] = useState(false);
   const [profitAmount, setProfitAmount] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetch('/api/products/sale-info')
-      .then(res => res.json())
-      .then((data: SaleProduct[]) => setProducts(data))
-      .catch(() => setProducts([]));
-  }, []);
+  // Map context products to SaleProduct format
+  const products: SaleProduct[] = contextProducts.map(p => ({
+    id: parseInt(p.id) || 0,
+    name: p.name,
+    sellingPrice: (p as any).sellingPrice || p.price,
+    price: p.price,
+    quantity: p.quantity
+  }));
 
   const filteredProducts = products.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -116,22 +119,23 @@ const SellProduct: React.FC = () => {
       }
 
       if (response.ok) {
-        const profit = selectedProducts.reduce((sum, item) => sum + ((item.sellingPrice - item.price) * item.quantity), 0);
+        // Extract profit and updatedProducts from new response structure
+        const { profit, updatedProducts } = data;
+        
         setProfitAmount(profit);
         setShowProfitModal(true);
-        // Reduce quantity in local products state
-        setProducts(prevProducts => prevProducts.map(product => {
-          const sold = selectedProducts.find(item => item.id === product.id);
-          return sold ? { ...product, quantity: product.quantity - sold.quantity } : product;
+        
+        // Update products in global context - this will automatically update all components
+        const stockUpdates = updatedProducts.map((p: any) => ({
+          id: String(p.id),
+          stock: p.stock
         }));
+        updateProductsStock(stockUpdates);
+        
         setSelectedProducts([]);
         setTotalBill(0);
-        // Optionally re-fetch products from backend for latest stock
-        fetch('/api/products/sale-info')
-          .then(res => res.json())
-          .then((data: SaleProduct[]) => setProducts(data))
-          .catch(() => {});
-        // Optionally trigger dashboard profit refresh
+        
+        // Trigger dashboard profit refresh
         if (window.dispatchEvent) {
           window.dispatchEvent(new Event('profit-updated'));
         }

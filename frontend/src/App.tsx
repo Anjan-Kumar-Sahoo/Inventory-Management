@@ -9,6 +9,10 @@ import { SellProduct } from './components/SellProduct';
 function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'suppliers' | 'sell'>('dashboard');
 
+  const handleNavigateToProducts = () => {
+    setActiveTab('products');
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -16,7 +20,7 @@ function App() {
       case 'products':
         return <ProductManager />;
       case 'suppliers':
-        return <SupplierManager />;
+        return <SupplierManager onNavigateToProducts={handleNavigateToProducts} />;
       case 'sell':
         return <SellProduct />;
       default:

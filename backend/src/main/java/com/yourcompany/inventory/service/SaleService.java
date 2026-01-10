@@ -6,14 +6,16 @@ import com.yourcompany.inventory.model.Sale;
 import com.yourcompany.inventory.repository.ProductRepository;
 import com.yourcompany.inventory.repository.ProfitRecordRepository;
 import com.yourcompany.inventory.repository.SaleRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 @Service
 public class SaleService {
@@ -28,8 +30,9 @@ public class SaleService {
     private ProfitRecordRepository profitRecordRepository;
 
     @Transactional
-    public double recordSale(List<Map<String, Object>> productsToSell) {
+    public Map<String, Object> recordSale(List<Map<String, Object>> productsToSell) {
         double totalProfitEarned = 0.0;
+        List<Product> updatedProducts = new ArrayList<>();
 
         for (Map<String, Object> item : productsToSell) {
             Long productId = item.get("id") instanceof Number ? ((Number) item.get("id")).longValue() : null;
@@ -58,7 +61,10 @@ public class SaleService {
 
             // Update product stock
             product.setStock(product.getStock() - quantity);
-            productRepository.save(product);
+            Product savedProduct = productRepository.saveAndFlush(product);
+            
+            // Add complete updated product to response
+            updatedProducts.add(savedProduct);
 
             // Record sale for each item (or aggregate if needed)
             Sale sale = new Sale();
@@ -74,7 +80,12 @@ public class SaleService {
         profitRecord.setProfit(getTotalProfit());
         profitRecord.setTimestamp(LocalDateTime.now());
         profitRecordRepository.save(profitRecord);
-        return totalProfitEarned;
+        
+        // Return both profit and updated products
+        Map<String, Object> response = new HashMap<>();
+        response.put("profit", totalProfitEarned);
+        response.put("updatedProducts", updatedProducts);
+        return response;
     }
 
     public double getTotalProfit() {

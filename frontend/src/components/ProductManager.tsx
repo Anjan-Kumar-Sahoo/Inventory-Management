@@ -7,7 +7,7 @@ import { SearchFilter } from './common/SearchFilter';
 import { Product } from '../types/inventory';
 
 export const ProductManager: React.FC = () => {
-  const { products, addProduct, updateProduct, deleteProduct } = useInventory();
+  const { products, addProduct, updateProduct, deleteProduct, suppliers, filterBySupplierId, setFilterBySupplierId } = useInventory();
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,8 +19,14 @@ export const ProductManager: React.FC = () => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.sku.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !categoryFilter || product.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+    const matchesSupplier = !filterBySupplierId || product.supplierId === filterBySupplierId;
+    return matchesSearch && matchesCategory && matchesSupplier;
   });
+
+  // Get supplier name for the filter badge
+  const filteredSupplierName = filterBySupplierId 
+    ? suppliers.find(s => s.id === filterBySupplierId)?.name 
+    : null;
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
@@ -57,6 +63,21 @@ export const ProductManager: React.FC = () => {
           Add Product
         </button>
       </div>
+
+      {/* Supplier Filter Badge */}
+      {filteredSupplierName && (
+        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <span className="text-sm text-blue-800">
+            Filtered by supplier: <span className="font-semibold">{filteredSupplierName}</span>
+          </span>
+          <button
+            onClick={() => setFilterBySupplierId(null)}
+            className="ml-auto text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
+            Clear Filter
+          </button>
+        </div>
+      )}
 
       <SearchFilter
         searchTerm={searchTerm}

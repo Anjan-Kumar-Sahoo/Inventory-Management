@@ -118,6 +118,27 @@ export async function deleteSupplier(id: string) {
     method: 'DELETE',
     headers: defaultHeaders
   });
-  if (!res.ok) return false;
-  return true;
+  
+  if (res.ok) {
+    return { success: true };
+  }
+  
+  // Handle 409 Conflict - supplier has linked products
+  if (res.status === 409) {
+    const errorData = await res.json();
+    return {
+      success: false,
+      status: 409,
+      message: errorData.message || 'Cannot delete supplier with linked products',
+      error: errorData.error,
+      timestamp: errorData.timestamp
+    };
+  }
+  
+  // Handle other errors
+  return {
+    success: false,
+    status: res.status,
+    message: 'Failed to delete supplier'
+  };
 }

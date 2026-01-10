@@ -3,10 +3,15 @@ import { Plus, Search } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
 import { SupplierTable } from './suppliers/SupplierTable';
 import { SupplierForm } from './suppliers/SupplierForm';
+import { ErrorDialog } from './common/ErrorDialog';
 import { Supplier } from '../types/inventory';
 
-export const SupplierManager: React.FC = () => {
-  const { suppliers, addSupplier, updateSupplier, deleteSupplier } = useInventory();
+interface SupplierManagerProps {
+  onNavigateToProducts?: () => void;
+}
+
+export const SupplierManager: React.FC<SupplierManagerProps> = ({ onNavigateToProducts }) => {
+  const { suppliers, addSupplier, updateSupplier, deleteSupplier, supplierDeleteError, clearSupplierDeleteError, products, setFilterBySupplierId } = useInventory();
   const [showForm, setShowForm] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,6 +39,24 @@ export const SupplierManager: React.FC = () => {
   const handleCancel = () => {
     setShowForm(false);
     setEditingSupplier(null);
+  };
+
+  const handleViewProducts = () => {
+    if (supplierDeleteError?.supplierId) {
+      setFilterBySupplierId(supplierDeleteError.supplierId);
+      onNavigateToProducts?.();
+    }
+  };
+
+  // Get linked products for the supplier that failed to delete
+  const getLinkedProducts = (): string[] => {
+    if (!supplierDeleteError?.supplierId) return [];
+    
+    const linkedProducts = products.filter(
+      product => product.supplierId === supplierDeleteError.supplierId
+    );
+    
+    return linkedProducts.map(product => product.name);
   };
 
   return (
@@ -76,6 +99,15 @@ export const SupplierManager: React.FC = () => {
           onDelete={deleteSupplier}
         />
       )}
+
+      <ErrorDialog
+        isOpen={!!supplierDeleteError}
+        onClose={clearSupplierDeleteError}
+        title="Cannot Delete Supplier"
+        message={supplierDeleteError?.message || ''}
+        linkedProducts={getLinkedProducts()}
+        onViewProducts={getLinkedProducts().length > 0 ? handleViewProducts : undefined}
+      />
     </div>
   );
 };

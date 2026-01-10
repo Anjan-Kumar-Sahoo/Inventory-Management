@@ -7,11 +7,16 @@ interface InventoryContextType {
   suppliers: Supplier[];
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
+  updateProductsStock: (updates: Array<{ id: string; stock: number }>) => void;
   deleteProduct: (id: string) => void;
   addSupplier: (supplier: Omit<Supplier, 'id'>) => void;
   updateSupplier: (id: string, supplier: Partial<Supplier>) => void;
   deleteSupplier: (id: string) => void;
   getInventoryStats: () => InventoryStats;
+  supplierDeleteError: { message: string; supplierId?: string } | null;
+  clearSupplierDeleteError: () => void;
+  filterBySupplierId: string | null;
+  setFilterBySupplierId: (id: string | null) => void;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -29,12 +34,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  type DeleteSupplierError = string | {
-    main: string;
-    products: string[];
-    instruction: string;
-  } | null;
-  const [deleteSupplierError, setDeleteSupplierError] = useState<DeleteSupplierError>(null);
+  const [supplierDeleteError, setSupplierDeleteError] = useState<{ message: string; supplierId?: string } | null>(null);
+  const [filterBySupplierId, setFilterBySupplierId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -107,6 +108,16 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     });
   };
 
+  const updateProductsStock = (updates: Array<{ id: string; stock: number }>) => {
+    // Batch update products stock from sale response
+    setProducts(prevProducts => 
+      prevProducts.map(product => {
+        const update = updates.find(u => u.id === product.id);
+        return update ? { ...product, quantity: update.stock } : product;
+      })
+    );
+  };
+
   const deleteProduct = (id: string) => {
     api.deleteProduct(id).then(() => {
       setProducts(prev => prev.filter(product => product.id !== id));
@@ -129,14 +140,23 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     });
   };
 
-  const deleteSupplier = (id: string) => {
-    api.deleteSupplier(id).then(success => {
-      if (success) {
-        setSuppliers(prev => prev.filter(supplier => supplier.id !== id));
-      } else {
-        setDeleteSupplierError('Failed to delete supplier.');
-      }
-    });
+  const deleteSupplier = async (id: string) => {
+    const result = await api.deleteSupplier(id);
+    
+    if (result.success) {
+      setSuppliers(prev => prev.filter(supplier => supplier.id !== id));
+      setSupplierDeleteError(null);
+    } else {
+      // Handle 409 Conflict or other errors
+      setSupplierDeleteError({
+        message: result.message || 'Failed to delete supplier',
+        supplierId: id
+      });
+    }
+  };
+
+  const clearSupplierDeleteError = () => {
+    setSupplierDeleteError(null);
   };
 
   const getInventoryStats = (): InventoryStats => {
@@ -159,37 +179,19 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
       suppliers,
       addProduct,
       updateProduct,
+      updateProductsStock,
       deleteProduct,
       addSupplier,
       updateSupplier,
       deleteSupplier,
-      getInventoryStats
+      getInventoryStats,
+      supplierDeleteError,
+      clearSupplierDeleteError,
+      filterBySupplierId,
+      setFilterBySupplierId
     }}>
       {loading && <div>Loading...</div>}
       {error && <div className="text-red-600">Error: {error}</div>}
-      {deleteSupplierError && (
-        <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-30 z-50">
-          <div className="bg-white p-6 rounded shadow-lg text-center max-w-lg">
-            {typeof deleteSupplierError === 'string' ? (
-              <p className="text-red-600 font-semibold mb-2">{deleteSupplierError}</p>
-            ) : (
-              <>
-                <p className="text-red-600 font-semibold mb-2">{deleteSupplierError.main}</p>
-                <div className="mb-2">
-                  <span className="font-semibold">Linked products:</span>
-                  <ul className="list-disc list-inside text-red-600">
-                    {deleteSupplierError.products.map((name: string, idx: number) => (
-                      <li key={idx}>{name}</li>
-                    ))}
-                  </ul>
-                </div>
-                <p className="text-red-600 font-semibold mb-2">{deleteSupplierError.instruction}</p>
-              </>
-            )}
-            <button className="px-4 py-2 bg-blue-600 text-white rounded mt-4" onClick={() => setDeleteSupplierError(null)}>OK</button>
-          </div>
-        </div>
-      )}
       {children}
     </InventoryContext.Provider>
   );

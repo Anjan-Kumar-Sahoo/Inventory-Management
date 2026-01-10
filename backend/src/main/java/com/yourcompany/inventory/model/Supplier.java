@@ -32,7 +32,7 @@ public class Supplier {
     @Column(name = "address")
     private String address;
 
-    @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "supplier", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Product> products;
 

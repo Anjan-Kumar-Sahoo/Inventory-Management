@@ -21,8 +21,8 @@ public class SaleController {
     public ResponseEntity<?> sellProducts(@RequestBody List<Map<String, Object>> productsToSell) {
         System.out.println("Incoming sale request: " + productsToSell);
         try {
-            double profit = saleService.recordSale(productsToSell);
-            return ResponseEntity.ok(profit);
+            Map<String, Object> result = saleService.recordSale(productsToSell);
+            return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
             String errorMsg = e.getMessage();
             if (errorMsg != null && errorMsg.contains("Product not found")) {

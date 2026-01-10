@@ -2,6 +2,7 @@ package com.yourcompany.inventory.service;
 
 import com.yourcompany.inventory.dto.SupplierDTO;
 import com.yourcompany.inventory.exception.ResourceNotFoundException;
+import com.yourcompany.inventory.exception.SupplierHasProductsException;
 import com.yourcompany.inventory.model.Supplier;
 import com.yourcompany.inventory.repository.SupplierRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,16 @@ public class SupplierService {
 
     @Transactional
     public void deleteSupplier(Long id) {
+        Supplier supplier = supplierRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id " + id));
+        
+        // Check if supplier has any linked products
+        if (supplier.getProducts() != null && !supplier.getProducts().isEmpty()) {
+            throw new SupplierHasProductsException(
+                "Cannot delete supplier. This supplier has " + supplier.getProducts().size() + 
+                " product(s) linked to it. Please delete or reassign the products first.");
+        }
+        
         supplierRepository.deleteById(id);
     }
 }

@@ -30,6 +30,15 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(SupplierHasProductsException.class)
+    public ResponseEntity<Object> handleSupplierHasProductsException(SupplierHasProductsException ex, WebRequest request) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+        body.put("error", "Supplier has linked products");
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+
     // Removed broad Exception handler to avoid interfering with CORS/security and to prevent all errors from being caught
 
     @ExceptionHandler(DataIntegrityViolationException.class)
