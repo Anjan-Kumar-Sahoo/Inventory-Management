@@ -65,13 +65,13 @@ export const ProfitDisplay: React.FC = () => {
   }, []);
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 transition-colors duration-500">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">Profit Earned</h3>
+        <h3 className="text-lg font-semibold text-[var(--on-surface)]">Profit Earned</h3>
         <button 
           onClick={handleReset}
           disabled={isResetting}
-          className="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
+          className="flex items-center text-sm text-[var(--on-surface-low)] hover:text-[var(--on-surface)] transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 mr-2 ${isResetting ? 'animate-spin' : ''}`} />
           {isResetting ? 'Resetting...' : 'Reset'}
@@ -79,10 +79,10 @@ export const ProfitDisplay: React.FC = () => {
       </div>
       <div className="flex items-center mb-2">
         <IndianRupee className="w-8 h-8 text-green-500 mr-4" />
-        <p className="text-3xl font-bold text-gray-900">₹{profit.toLocaleString('en-IN')}</p>
+        <p className="text-3xl font-bold text-[var(--on-surface)]">₹{profit.toLocaleString('en-IN')}</p>
       </div>
       {lastReset && (
-        <p className="text-xs text-gray-500">Last reset: {lastReset}</p>
+        <p className="text-xs text-[var(--on-surface-low)]">Last reset: {lastReset}</p>
       )}
     </div>
   );

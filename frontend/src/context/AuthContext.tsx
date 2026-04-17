@@ -10,6 +10,7 @@ interface AuthContextType {
   login: (request: LoginRequest) => Promise<void>;
   register: (request: RegisterRequest) => Promise<void>;
   verifyOtp: (otp: string) => Promise<void>;
+  updateStoreName: (newName: string) => Promise<void>;
   logout: () => void;
   setPendingEmail: (email: string) => void;
 }
@@ -70,6 +71,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await api.verifyOtp({ email: pendingEmail, otp });
   };
 
+  const updateStoreName = async (newName: string) => {
+    const updatedUser = await api.updateStoreName(newName);
+    const newUser = { ...user!, storeName: updatedUser.storeName };
+    setUser(newUser);
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
+  };
+
   const logout = () => {
     clearStoredAuth();
     setToken(null);
@@ -85,6 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     register,
     verifyOtp,
+    updateStoreName,
     logout,
     setPendingEmail
   }), [user, token, pendingEmail]);

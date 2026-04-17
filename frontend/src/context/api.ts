@@ -155,3 +155,11 @@ export async function deleteSupplier(id: string) {
     message: errorData.error || 'Failed to delete supplier'
   };
 }
+
+export async function updateStoreName(newName: string) {
+  const response = await authFetch('/user/store-name', {
+    method: 'PUT',
+    body: JSON.stringify({ storeName: newName })
+  });
+  return handleJsonResponse<any>(response, 'Failed to update store name');
+}

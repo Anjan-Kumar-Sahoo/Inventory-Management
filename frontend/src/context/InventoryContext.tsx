@@ -1,22 +1,23 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import * as api from './api';
 import { Product, Supplier, InventoryStats } from '../types/inventory';
 
 interface InventoryContextType {
   products: Product[];
   suppliers: Supplier[];
-  addProduct: (product: Omit<Product, 'id'>) => void;
-  updateProduct: (id: string, product: Partial<Product>) => void;
+  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
+  updateProduct: (id: string, product: Partial<Product>) => Promise<void>;
   updateProductsStock: (updates: Array<{ id: string; stock: number }>) => void;
-  deleteProduct: (id: string) => void;
-  addSupplier: (supplier: Omit<Supplier, 'id'>) => void;
-  updateSupplier: (id: string, supplier: Partial<Supplier>) => void;
-  deleteSupplier: (id: string) => void;
+  deleteProduct: (id: string) => Promise<void>;
+  addSupplier: (supplier: Omit<Supplier, 'id'>) => Promise<void>;
+  updateSupplier: (id: string, supplier: Partial<Supplier>) => Promise<void>;
+  deleteSupplier: (id: string) => Promise<boolean>;
   getInventoryStats: () => InventoryStats;
   supplierDeleteError: { message: string; supplierId?: string } | null;
   clearSupplierDeleteError: () => void;
   filterBySupplierId: string | null;
   setFilterBySupplierId: (id: string | null) => void;
+  refreshData: () => Promise<void>;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -36,141 +37,106 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [error, setError] = useState<string | null>(null);
   const [supplierDeleteError, setSupplierDeleteError] = useState<{ message: string; supplierId?: string } | null>(null);
   const [filterBySupplierId, setFilterBySupplierId] = useState<string | null>(null);
+  const clearSupplierDeleteError = () => setSupplierDeleteError(null);
 
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-      try {
-        const [productsData, suppliersData] = await Promise.all([
-          api.fetchProducts(),
-          api.fetchSuppliers()
-        ]);
-        // Normalize product fields for frontend
-          const normalizedProducts = productsData.map(p => ({
-            ...p,
-            quantity: (p as any).stock ?? 0,
-            supplierId: (p as any).supplier?.id ?? '',
-            supplierName: (p as any).supplier?.name ?? 'Unknown Supplier',
-            createdAt: p.createdAt ? new Date(p.createdAt) : new Date(0),
-            updatedAt: p.updatedAt ? new Date(p.updatedAt) : new Date(0),
-          }));
-        setProducts(normalizedProducts);
-        setSuppliers(suppliersData);
-        setError(null);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+  const normalizeProduct = (p: any): Product => ({
+    ...p,
+    id: String(p.id),
+    quantity: p.stock ?? p.quantity ?? 0,
+    stock: p.stock ?? p.quantity ?? 0, // Keep both synced
+    supplierId: p.supplier?.id ? String(p.supplier.id) : (p.supplierId ? String(p.supplierId) : ''),
+    supplierName: p.supplier?.name ?? p.supplierName ?? 'Unknown Supplier',
+    createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
+    updatedAt: p.updatedAt ? new Date(p.updatedAt) : new Date(),
+  });
+
+  const loadData = useCallback(async () => {
+    try {
+      const [productsData, suppliersData] = await Promise.all([
+        api.fetchProducts(),
+        api.fetchSuppliers()
+      ]);
+      setProducts(productsData.map(normalizeProduct));
+      setSuppliers(suppliersData);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    loadData();
   }, []);
 
-  const addProduct = (productData: Omit<Product, 'id'>) => {
-    // Prepare request body for backend: stock and supplierId
-    const normalized: any = {
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const addProduct = async (productData: Omit<Product, 'id'>) => {
+    const normalizedRequest: any = {
       ...productData,
       stock: (productData as any).stock ?? productData.quantity ?? 0,
-      supplierId: productData.supplierId ?? (productData as any).supplier_id ?? '',
+      supplierId: productData.supplierId || null,
     };
-    if ('quantity' in normalized) delete normalized.quantity;
-    api.addProduct(normalized).then(newProduct => {
-      setProducts(prev => [...prev, {
-        ...newProduct,
-        quantity: newProduct.quantity ?? (newProduct as any).stock ?? 0,
-        supplierId: newProduct.supplierId ?? (newProduct as any).supplier_id ?? '',
-        createdAt: newProduct.createdAt ? new Date(newProduct.createdAt) : new Date(0),
-        updatedAt: newProduct.updatedAt ? new Date(newProduct.updatedAt) : new Date(0),
-      }]);
-    });
+    const newProduct = await api.addProduct(normalizedRequest);
+    setProducts(prev => [...prev, normalizeProduct(newProduct)]);
   };
 
-  const updateProduct = (id: string, productData: Partial<Product>) => {
-    // Prepare request body for backend: stock and supplierId
-    const normalized: any = {
+  const updateProduct = async (id: string, productData: Partial<Product>) => {
+    const normalizedRequest: any = {
       ...productData,
-      stock: (productData as any).stock ?? productData.quantity ?? 0,
-      supplierId: productData.supplierId ?? (productData as any).supplier_id ?? '',
+      stock: typeof (productData as any).stock !== 'undefined' ? (productData as any).stock : productData.quantity,
+      supplierId: productData.supplierId || null,
     };
-    if ('quantity' in normalized) delete normalized.quantity;
-    api.updateProduct(id, normalized).then(async () => {
-      // Refetch products after update
-      const productsData = await api.fetchProducts();
-      const normalizedProducts = productsData.map(p => ({
-        ...p,
-        quantity: (p as any).stock ?? 0,
-        supplierId: (p as any).supplier?.id ?? '',
-        supplierName: (p as any).supplier?.name ?? 'Unknown Supplier',
-        createdAt: p.createdAt ? new Date(p.createdAt) : new Date(0),
-        updatedAt: p.updatedAt ? new Date(p.updatedAt) : new Date(0),
-      }));
-      setProducts(normalizedProducts);
-    });
+    await api.updateProduct(id, normalizedRequest);
+    // Optimistic update + fetch latest to be sure
+    await loadData();
   };
 
   const updateProductsStock = (updates: Array<{ id: string; stock: number }>) => {
-    // Batch update products stock from sale response
     setProducts(prevProducts => 
       prevProducts.map(product => {
-        const update = updates.find(u => u.id === product.id);
-        return update ? { ...product, quantity: update.stock } : product;
+        const update = updates.find(u => String(u.id) === String(product.id));
+        if (update) {
+          return { ...product, quantity: update.stock, stock: update.stock };
+        }
+        return product;
       })
     );
   };
 
-  const deleteProduct = (id: string) => {
-    api.deleteProduct(id).then(() => {
-      setProducts(prev => prev.filter(product => product.id !== id));
-    });
+  const deleteProduct = async (id: string) => {
+    await api.deleteProduct(id);
+    setProducts(prev => prev.filter(p => p.id !== id));
   };
 
-  const addSupplier = (supplierData: Omit<Supplier, 'id'>) => {
-    if (!supplierData.name || !supplierData.contactPerson) {
-      setError('Supplier name and contact person are required.');
-      return;
-    }
-    api.addSupplier(supplierData).then(newSupplier => {
-      setSuppliers(prev => [...prev, newSupplier]);
-    });
+  const addSupplier = async (supplierData: Omit<Supplier, 'id'>) => {
+    const newSupplier = await api.addSupplier(supplierData);
+    setSuppliers(prev => [...prev, newSupplier]);
   };
 
-  const updateSupplier = (id: string, supplierData: Partial<Supplier>) => {
-    api.updateSupplier(id, supplierData).then(updated => {
-      setSuppliers(prev => prev.map(supplier => supplier.id === id ? updated : supplier));
-    });
+  const updateSupplier = async (id: string, supplierData: Partial<Supplier>) => {
+    const updated = await api.updateSupplier(id, supplierData);
+    setSuppliers(prev => prev.map(s => s.id === id ? updated : s));
   };
 
-  const deleteSupplier = async (id: string) => {
+  const deleteSupplier = async (id: string): Promise<boolean> => {
     const result = await api.deleteSupplier(id);
-    
     if (result.success) {
-      setSuppliers(prev => prev.filter(supplier => supplier.id !== id));
+      setSuppliers(prev => prev.filter(s => s.id !== id));
       setSupplierDeleteError(null);
+      return true;
     } else {
-      // Handle 409 Conflict or other errors
-      setSupplierDeleteError({
-        message: result.message || 'Failed to delete supplier',
-        supplierId: id
-      });
+      setSupplierDeleteError({ message: result.message || 'Deletion failed', supplierId: id });
+      return false;
     }
-  };
-
-  const clearSupplierDeleteError = () => {
-    setSupplierDeleteError(null);
   };
 
   const getInventoryStats = (): InventoryStats => {
     const totalProducts = products.length;
-    const totalValue = products.reduce((sum, product) => sum + (product.price * ((product as any).stock ?? product.quantity)), 0);
-    const lowStockItems = products.filter(product => ((product as any).stock ?? product.quantity) < 10).length;
-    const outOfStockItems = products.filter(product => ((product as any).stock ?? product.quantity) === 0).length;
+    const totalValue = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+    const lowStockItems = products.filter(p => p.quantity > 0 && p.quantity < 10).length;
+    const outOfStockItems = products.filter(p => p.quantity === 0).length;
 
-    return {
-      totalProducts,
-      totalValue,
-      lowStockItems,
-      outOfStockItems
-    };
+    return { totalProducts, totalValue, lowStockItems, outOfStockItems };
   };
 
   return (
@@ -188,10 +154,9 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
       supplierDeleteError,
       clearSupplierDeleteError,
       filterBySupplierId,
-      setFilterBySupplierId
+      setFilterBySupplierId,
+      refreshData: loadData
     }}>
-      {loading && <div>Loading...</div>}
-      {error && <div className="text-red-600">Error: {error}</div>}
       {children}
     </InventoryContext.Provider>
   );
