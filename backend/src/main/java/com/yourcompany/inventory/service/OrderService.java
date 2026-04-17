@@ -11,6 +11,7 @@ import com.yourcompany.inventory.repository.ProductRepository;
 import com.yourcompany.inventory.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,17 +29,18 @@ public class OrderService {
     @Autowired
     private UserRepository userRepository;
 
+    @Transactional
     public Order createOrder(OrderDTO orderDTO) {
         Product product = productRepository.findById(orderDTO.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id " + orderDTO.getProductId()));
         User user = userRepository.findById(orderDTO.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + orderDTO.getUserId()));
 
-        if (product.getStock() < orderDTO.getQuantity()) {
-            throw new OutOfStockException("Product " + product.getName() + " is out of stock.");
+        // Perform Atomic Stock Decrement
+        int rowsUpdated = productRepository.decrementStock(orderDTO.getProductId(), orderDTO.getQuantity());
+        if (rowsUpdated == 0) {
+            throw new OutOfStockException("Insufficient stock or concurrent update for product: " + product.getName());
         }
-        product.setStock(product.getStock() - orderDTO.getQuantity());
-        productRepository.save(product);
 
         Order order = new Order();
         order.setProduct(product);
@@ -56,5 +58,3 @@ public class OrderService {
         return orderRepository.findAll();
     }
 }
-
-

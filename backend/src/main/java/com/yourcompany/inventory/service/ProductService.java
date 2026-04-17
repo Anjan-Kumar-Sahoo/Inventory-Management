@@ -22,6 +22,7 @@ public class ProductService {
     @Autowired
     private SupplierRepository supplierRepository;
 
+    @Transactional
     public Product createProduct(ProductDTO productDTO) {
     Product product = new Product();
     product.setName(productDTO.getName());
@@ -41,6 +42,7 @@ public class ProductService {
         return productRepository.findById(id);
     }
 
+    @Transactional
     public Product updateProduct(Long id, ProductDTO productDetails) {
     Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product not found with id " + id));
     product.setName(productDetails.getName());
