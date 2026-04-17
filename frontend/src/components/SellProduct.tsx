@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Minus, X, IndianRupee, CheckCircle, AlertCircle } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
+import { authFetch } from '../context/api';
 
 interface SaleProduct {
   id: number;
@@ -102,11 +103,8 @@ const SellProduct: React.FC = () => {
       }));
       console.log('Sale payload:', payload); // Debug log for product IDs
 
-      const response = await fetch('/api/sales/sell', {
+      const response = await authFetch('/sales/sell', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(payload),
       });
 

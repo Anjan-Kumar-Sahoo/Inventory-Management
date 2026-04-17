@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { IndianRupee, RefreshCw } from 'lucide-react';
+import { authFetch } from '../../context/api';
 
 export const ProfitDisplay: React.FC = () => {
   const [profit, setProfit] = useState<number>(0);
@@ -8,7 +9,7 @@ export const ProfitDisplay: React.FC = () => {
 
   const fetchProfit = async () => {
     try {
-      const response = await fetch('/api/sales/profit/latest');
+      const response = await authFetch('/sales/profit/latest');
       if (response.ok) {
         const data = await response.json();
         setProfit(data.profit);
@@ -32,7 +33,7 @@ export const ProfitDisplay: React.FC = () => {
   const handleReset = async () => {
     setIsResetting(true);
     try {
-      const response = await fetch('/api/sales/reset', { method: 'DELETE' });
+      const response = await authFetch('/sales/reset', { method: 'DELETE' });
       if (response.ok) {
         const data = await response.json();
         setProfit(0);

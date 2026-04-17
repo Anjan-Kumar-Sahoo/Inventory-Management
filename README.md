@@ -7,6 +7,12 @@ A full-stack inventory management application built with Spring Boot, MySQL, and
 
 🚀 **Features**
 
+🔹 **Secure Authentication** - Email registration/login with BCrypt password hashing and JWT sessions.
+
+🔹 **OTP Verification** - 6-digit email OTP verification before first login.
+
+🔹 **Protected APIs** - Product, supplier, sales, and order APIs require Bearer token authentication.
+
 🔹 **Supplier Management** – Add, update, delete, and view suppliers.
 
 🔹 **Product Management** – Manage products with supplier linkage.
@@ -23,8 +29,8 @@ A full-stack inventory management application built with Spring Boot, MySQL, and
 
 🛠️ **Tech Stack**
 
-**Backend:** Java, Spring Boot, Spring Data JPA, REST APIs  
-**Frontend:** React.js, Axios, TypeScript, Tailwind CSS  
+**Backend:** Java, Spring Boot, Spring Data JPA, Spring Security, JWT, Java Mail, Flyway  
+**Frontend:** React.js, TypeScript, Tailwind CSS, Framer Motion  
 **Database:** MySQL  
 **Build Tools:** Maven, npm  
 **Other:** Git, Postman (for testing APIs)

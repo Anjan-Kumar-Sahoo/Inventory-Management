@@ -1,131 +1,145 @@
-// Create a product with selling price
-export async function createProduct(product: { name: string; sellingPrice: number; [key: string]: any }) {
-  const response = await fetch('/api/products', {
+import { Product, Supplier } from '../types/inventory';
+import { AuthResponse, LoginRequest, RegisterRequest, VerifyOtpRequest } from '../types/auth';
+
+const API_HOST = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const API_BASE_URL = `${API_HOST}/api`;
+const AUTH_BASE_URL = `${API_HOST}/auth`;
+
+function getAuthToken(): string | null {
+  return localStorage.getItem('inventory_jwt');
+}
+
+function buildHeaders(includeJson: boolean = true): HeadersInit {
+  const headers: HeadersInit = includeJson ? { 'Content-Type': 'application/json' } : {};
+  const token = getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+async function handleJsonResponse<T>(response: Response, defaultError: string): Promise<T> {
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : {};
+
+  if (!response.ok) {
+    const message = data?.error || data?.message || defaultError;
+    throw new Error(message);
+  }
+
+  return data as T;
+}
+
+export async function authFetch(path: string, options: RequestInit = {}): Promise<Response> {
+  const headers = {
+    ...buildHeaders(!options.headers || (options.headers as any)['Content-Type'] !== undefined),
+    ...(options.headers || {})
+  };
+
+  return fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers
+  });
+}
+
+export async function register(request: RegisterRequest): Promise<{ message: string }> {
+  const response = await fetch(`${AUTH_BASE_URL}/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(product),
+    body: JSON.stringify(request)
   });
-  return response.json();
+  return handleJsonResponse(response, 'Registration failed');
 }
 
-// Update product selling price
-export async function updateProductSellingPrice(id: string, sellingPrice: number) {
-  const response = await fetch(`/api/products/${id}`, {
-    method: 'PUT',
+export async function verifyOtp(request: VerifyOtpRequest): Promise<{ message: string }> {
+  const response = await fetch(`${AUTH_BASE_URL}/verify-otp`, {
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sellingPrice }),
+    body: JSON.stringify(request)
   });
-  return response.json();
-}
-// Get product by ID
-export async function fetchProductById(id: string) {
-  const res = await fetch(`${BASE_URL}/products/${id}`, {
-    headers: defaultHeaders
-  });
-  if (!res.ok) throw new Error('Failed to fetch product');
-  return res.json() as Promise<Product>;
+  return handleJsonResponse(response, 'OTP verification failed');
 }
 
-// Get supplier by ID
-export async function fetchSupplierById(id: string) {
-  const res = await fetch(`${BASE_URL}/suppliers/${id}`, {
-    headers: defaultHeaders
+export async function login(request: LoginRequest): Promise<AuthResponse> {
+  const response = await fetch(`${AUTH_BASE_URL}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
   });
-  if (!res.ok) throw new Error('Failed to fetch supplier');
-  return res.json() as Promise<Supplier>;
+  return handleJsonResponse(response, 'Login failed');
 }
-const BASE_URL = 'http://localhost:8080/api';
-
-const USERNAME = 'admin';
-const PASSWORD = 'password';
-const basicAuth = 'Basic ' + btoa(`${USERNAME}:${PASSWORD}`);
-
-const defaultHeaders = {
-  'Content-Type': 'application/json',
-  'Authorization': basicAuth
-};
-
-import { Product, Supplier } from '../types/inventory';
-// API utility for backend requests
 
 export async function fetchProducts() {
-  const res = await fetch(`${BASE_URL}/products`, {
-    headers: defaultHeaders
-  });
-  if (!res.ok) throw new Error('Failed to fetch products');
-  return res.json() as Promise<Product[]>;
+  const response = await authFetch('/products');
+  return handleJsonResponse<Product[]>(response, 'Failed to fetch products');
 }
 
 export async function fetchSuppliers() {
-  const res = await fetch(`${BASE_URL}/suppliers`, {
-    headers: defaultHeaders
-  });
-  if (!res.ok) throw new Error('Failed to fetch suppliers');
-  return res.json() as Promise<Supplier[]>;
+  const response = await authFetch('/suppliers');
+  return handleJsonResponse<Supplier[]>(response, 'Failed to fetch suppliers');
+}
+
+export async function fetchProductById(id: string) {
+  const response = await authFetch(`/products/${id}`);
+  return handleJsonResponse<Product>(response, 'Failed to fetch product');
+}
+
+export async function fetchSupplierById(id: string) {
+  const response = await authFetch(`/suppliers/${id}`);
+  return handleJsonResponse<Supplier>(response, 'Failed to fetch supplier');
 }
 
 export async function addProduct(product: Omit<Product, 'id'>) {
-  const res = await fetch(`${BASE_URL}/products`, {
+  const response = await authFetch('/products', {
     method: 'POST',
-    headers: defaultHeaders,
     body: JSON.stringify(product)
   });
-  if (!res.ok) throw new Error('Failed to add product');
-  return res.json() as Promise<Product>;
+  return handleJsonResponse<Product>(response, 'Failed to add product');
 }
 
 export async function updateProduct(id: string, product: Partial<Product>) {
-  const res = await fetch(`${BASE_URL}/products/${id}`, {
+  const response = await authFetch(`/products/${id}`, {
     method: 'PUT',
-    headers: defaultHeaders,
     body: JSON.stringify(product)
   });
-  if (!res.ok) throw new Error('Failed to update product');
-  return res.json() as Promise<Product>;
+  return handleJsonResponse<Product>(response, 'Failed to update product');
 }
 
 export async function deleteProduct(id: string) {
-  const res = await fetch(`${BASE_URL}/products/${id}`, {
-    method: 'DELETE',
-    headers: defaultHeaders
-  });
-  if (!res.ok) return false;
+  const response = await authFetch(`/products/${id}`, { method: 'DELETE' });
+  if (!response.ok) {
+    throw new Error('Failed to delete product');
+  }
   return true;
 }
 
 export async function addSupplier(supplier: Omit<Supplier, 'id'>) {
-  const res = await fetch(`${BASE_URL}/suppliers`, {
+  const response = await authFetch('/suppliers', {
     method: 'POST',
-    headers: defaultHeaders,
     body: JSON.stringify(supplier)
   });
-  if (!res.ok) throw new Error('Failed to add supplier');
-  return res.json() as Promise<Supplier>;
+  return handleJsonResponse<Supplier>(response, 'Failed to add supplier');
 }
 
 export async function updateSupplier(id: string, supplier: Partial<Supplier>) {
-  const res = await fetch(`${BASE_URL}/suppliers/${id}`, {
+  const response = await authFetch(`/suppliers/${id}`, {
     method: 'PUT',
-    headers: defaultHeaders,
     body: JSON.stringify(supplier)
   });
-  if (!res.ok) throw new Error('Failed to update supplier');
-  return res.json() as Promise<Supplier>;
+  return handleJsonResponse<Supplier>(response, 'Failed to update supplier');
 }
 
 export async function deleteSupplier(id: string) {
-  const res = await fetch(`${BASE_URL}/suppliers/${id}`, {
-    method: 'DELETE',
-    headers: defaultHeaders
-  });
-  
-  if (res.ok) {
+  const response = await authFetch(`/suppliers/${id}`, { method: 'DELETE' });
+
+  if (response.ok) {
     return { success: true };
   }
-  
-  // Handle 409 Conflict - supplier has linked products
-  if (res.status === 409) {
-    const errorData = await res.json();
+
+  const text = await response.text();
+  const errorData = text ? JSON.parse(text) : {};
+
+  if (response.status === 409) {
     return {
       success: false,
       status: 409,
@@ -134,11 +148,10 @@ export async function deleteSupplier(id: string) {
       timestamp: errorData.timestamp
     };
   }
-  
-  // Handle other errors
+
   return {
     success: false,
-    status: res.status,
-    message: 'Failed to delete supplier'
+    status: response.status,
+    message: errorData.error || 'Failed to delete supplier'
   };
 }
