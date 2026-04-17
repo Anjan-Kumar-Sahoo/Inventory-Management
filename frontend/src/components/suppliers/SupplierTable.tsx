@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, Mail, Phone, Users } from 'lucide-react';
+import { Edit2, Trash2, Mail, Phone, Users, MapPin, ExternalLink } from 'lucide-react';
 import { Supplier } from '../../types/inventory';
 
 interface SupplierTableProps {
@@ -11,71 +11,80 @@ interface SupplierTableProps {
 export const SupplierTable: React.FC<SupplierTableProps> = ({ suppliers, onEdit, onDelete }) => {
   if (suppliers.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-        <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No suppliers found</h3>
-        <p className="text-gray-500">Start by adding your first supplier to manage vendor relationships.</p>
+      <div className="glass-card p-16 text-center border-[rgba(255,255,255,0.03)] group">
+        <div className="relative inline-block mb-6">
+           <div className="absolute -inset-4 bg-[#FFABF3] opacity-10 blur-xl rounded-full group-hover:opacity-20 transition-opacity"></div>
+           <Users className="w-16 h-16 text-[#FFABF3] mx-auto relative z-10" />
+        </div>
+        <h3 className="text-xl font-black text-[#DFE2F3] mb-2 uppercase tracking-tight">No Suppliers</h3>
+        <p className="text-[#CBC3D9] opacity-60">No suppliers found.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Person</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+    <div className="overflow-x-auto selection:bg-[#FFABF3] selection:text-[#380038]">
+      <table className="min-w-full">
+        <thead>
+          <tr className="border-b border-[rgba(255,255,255,0.05)]">
+            <th className="px-6 py-4 text-left text-[10px] font-bold text-[#CBC3D9] uppercase tracking-[0.2em]">Supplier</th>
+            <th className="px-6 py-4 text-left text-[10px] font-bold text-[#CBC3D9] uppercase tracking-[0.2em]">Contact Person</th>
+            <th className="px-6 py-4 text-left text-[10px] font-bold text-[#CBC3D9] uppercase tracking-[0.2em]">Email</th>
+            <th className="px-6 py-4 text-left text-[10px] font-bold text-[#CBC3D9] uppercase tracking-[0.2em]">Phone Number</th>
+            <th className="px-6 py-4 text-left text-[10px] font-bold text-[#CBC3D9] uppercase tracking-[0.2em]">Address</th>
+            <th className="px-6 py-4 text-right text-[10px] font-bold text-[#CBC3D9] uppercase tracking-[0.2em]">Edit</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-[rgba(255,255,255,0.03)]">
+          {suppliers.map((supplier) => (
+            <tr key={supplier.id} className="group hover:bg-[rgba(255,171,243,0.02)] transition-all duration-300">
+              <td className="px-6 py-5 whitespace-nowrap">
+                <div className="text-sm font-bold text-[#DFE2F3] group-hover:text-white transition-colors uppercase tracking-tight">{supplier.name}</div>
+              </td>
+              <td className="px-6 py-5 whitespace-nowrap">
+                <div className="text-xs font-semibold text-[#CBC3D9] group-hover:text-[#FFABF3] transition-colors">{supplier.contactPerson}</div>
+              </td>
+              <td className="px-6 py-5 whitespace-nowrap">
+                <div className="flex items-center group/link">
+                  <Mail className="w-3.5 h-3.5 text-[#CBC3D9] opacity-40 group-hover:opacity-100 transition-opacity mr-2" />
+                  <a href={`mailto:${supplier.email}`} className="text-xs font-mono font-bold text-[#CBC3D9] hover:text-[#BDF4FF] transition-colors inline-flex items-center gap-1">
+                    {supplier.email.toLowerCase()}
+                    <ExternalLink className="w-2.5 h-2.5 opacity-0 group-hover/link:opacity-100 transition-opacity" />
+                  </a>
+                </div>
+              </td>
+              <td className="px-6 py-5 whitespace-nowrap">
+                <div className="flex items-center">
+                  <Phone className="w-3.5 h-3.5 text-[#CBC3D9] opacity-40 group-hover:opacity-100 transition-opacity mr-2" />
+                  <span className="text-xs font-mono font-bold text-[#DFE2F3]">{supplier.phone}</span>
+                </div>
+              </td>
+              <td className="px-6 py-5">
+                <div className="flex items-center gap-2 max-w-xs">
+                   <MapPin className="w-3 h-3 text-[#FFABF3] shrink-0 opacity-40" />
+                   <span className="text-xs text-[#CBC3D9] truncate opacity-80 group-hover:opacity-100 transition-opacity">{supplier.address}</span>
+                </div>
+              </td>
+              <td className="px-6 py-5 whitespace-nowrap text-right">
+                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <button
+                    onClick={() => onEdit(supplier)}
+                    className="p-2 rounded-lg bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.05)] text-[#CBC3D9] hover:border-[#FFABF3] hover:text-[#FFABF3] transition-all"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => onDelete(supplier.id)}
+                    className="p-2 rounded-lg bg-[rgba(255,68,68,0.05)] border border-[rgba(255,68,68,0.1)] text-red-400 hover:bg-red-400 hover:text-[#380038] transition-all"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </td>
             </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {suppliers.map((supplier) => (
-              <tr key={supplier.id} className="hover:bg-gray-50 transition-colors duration-150">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{supplier.name}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{supplier.contactPerson}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <Mail className="w-4 h-4 text-gray-400 mr-2" />
-                    <a href={`mailto:${supplier.email}`} className="text-sm text-blue-600 hover:text-blue-800">
-                      {supplier.email}
-                    </a>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <Phone className="w-4 h-4 text-gray-400 mr-2" />
-                    <span className="text-sm text-gray-900">{supplier.phone}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">{supplier.address}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end space-x-2">
-                    <button
-                      onClick={() => onEdit(supplier)}
-                      className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-all duration-150"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => onDelete(supplier.id)}
-                      className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-all duration-150"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
