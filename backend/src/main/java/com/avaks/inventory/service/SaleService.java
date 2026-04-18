@@ -118,7 +118,6 @@ public class SaleService {
         return (latest != null) ? latest.getProfit() : 0.0;
     }
 
-    @Cacheable(value = CacheNames.LATEST_PROFIT_BY_USER, key = "T(com.avaks.inventory.config.cache.CacheKeyUtil).currentUserEmail()")
     public ProfitRecord getLatestProfitRecord() {
         User currentUser = userService.getCurrentAuthenticatedUser();
         return profitRecordRepository.findTopByUserIdOrderByTimestampDesc(currentUser.getId());
