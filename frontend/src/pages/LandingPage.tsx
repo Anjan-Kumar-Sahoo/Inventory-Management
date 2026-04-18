@@ -178,7 +178,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-xl" />
             </div>
             <div className="hidden min-[380px]:block">
-              <p className="text-[11px] sm:text-xs font-black text-[var(--on-surface)] tracking-tight">Godamm</p>
+              <p className="text-[11px] sm:text-xs font-black text-[var(--on-surface)] tracking-tight">GoDamm</p>
               <p className="hidden sm:block text-[10px] text-[var(--on-surface-low)] uppercase tracking-[0.18em] opacity-70">
                 Warehouse
               </p>
@@ -601,7 +601,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       <footer className="py-8 text-center relative z-10">
         <div className="inline-flex items-center px-4 py-2 glass-card text-[10px] sm:text-xs text-[var(--on-surface-low)] opacity-70 border-[rgba(255,255,255,0.03)]">
-          Godamm - Made in Love  - An Inventory Management System
+          GoDamm - Made in Love  - An Inventory Management System
         </div>
       </footer>
     </div>
