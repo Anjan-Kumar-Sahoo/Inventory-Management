@@ -48,8 +48,14 @@ Set production values at minimum:
 - DB_USERNAME
 - DB_PASSWORD
 - REDIS_PASSWORD
+- MAIL_HOST
+- MAIL_PORT
 - MAIL_USERNAME
 - MAIL_PASSWORD
+
+Mail notes:
+- Java Mail in Spring Boot sends OTP over SMTP, so `MAIL_HOST` and `MAIL_PORT` are required.
+- Typical SMTP ports are `587` (STARTTLS) and `465` (SSL/TLS).
 
 If using AWS RDS MySQL:
 - Set DB_URL to your RDS endpoint, for example:

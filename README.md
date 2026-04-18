@@ -102,13 +102,20 @@ Copy `.env.example` to `.env` and fill real values.
 - REDIS_HOST
 - REDIS_PORT
 - REDIS_PASSWORD
+- MAIL_HOST
+- MAIL_PORT
 - MAIL_USERNAME
 - MAIL_PASSWORD
 - CORS_ALLOWED_ORIGINS
 
+Mail notes:
+- Spring Boot uses Java Mail over SMTP, so `MAIL_HOST` and `MAIL_PORT` are both required.
+- Common provider ports are `587` (STARTTLS) and `465` (SSL/TLS).
+
 ### Required frontend variable (Vercel)
 
 - VITE_API_BASE_URL=https://api.godamm.mraks.dev
+- VITE_API_URL=https://api.godamm.mraks.dev (supported alias)
 
 ## Local Development
 
