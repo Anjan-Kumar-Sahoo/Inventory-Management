@@ -9,7 +9,7 @@ RUN mvn -B -DskipTests dependency:go-offline
 COPY src ./src
 RUN mvn -B -DskipTests clean package spring-boot:repackage
 
-FROM openjdk:17-jdk-slim AS runtime
+FROM eclipse-temurin:17-jre-jammy AS runtime
 WORKDIR /app
 
 RUN apt-get update \
