@@ -38,11 +38,25 @@ public class AuthService {
     @Transactional
     public void register(RegisterRequest request) {
         String email = normalizeEmail(request.getEmail());
-        if (userRepository.existsByEmail(email)) {
-            throw new DuplicateEmailException("Email is already registered");
-        }
 
         validatePasswordStrength(request.getPassword());
+
+        User existingUser = userRepository.findByEmail(email).orElse(null);
+        if (existingUser != null) {
+            if (Boolean.TRUE.equals(existingUser.getIsVerified())) {
+                throw new DuplicateEmailException("Email is already registered");
+            }
+
+            existingUser.setStoreName(request.getStoreName().trim());
+            existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
+            existingUser.setRole("ROLE_USER");
+            existingUser.setIsVerified(false);
+
+            User updatedUser = userRepository.save(existingUser);
+            String otp = otpService.generateAndStoreOtp(updatedUser);
+            emailService.sendOtpEmail(updatedUser.getEmail(), updatedUser.getStoreName(), otp, otpExpirationMinutes);
+            return;
+        }
 
         User user = new User();
         user.setEmail(email);
