@@ -15,8 +15,8 @@ Backend API domain:
 
 ## 1) Launch EC2
 
-- Instance: t3.medium or t4g.medium (4 GB RAM)
-- Storage: 30 GB gp3 minimum
+- Instance: t3.medium, t4g.medium, or c7i-flex.large (4 GB RAM)
+- Storage: 20 GB works, 30 GB gp3 is recommended
 - Security Group inbound: 22, 80, 443, 8080
 
 ## 2) Bootstrap host
@@ -44,11 +44,19 @@ nano .env
 
 Set production values at minimum:
 - JWT_SECRET
-- MYSQL_PASSWORD
-- MYSQL_ROOT_PASSWORD
+- DB_URL
+- DB_USERNAME
+- DB_PASSWORD
 - REDIS_PASSWORD
 - MAIL_USERNAME
 - MAIL_PASSWORD
+
+If using AWS RDS MySQL:
+- Set DB_URL to your RDS endpoint, for example:
+	- jdbc:mysql://<rds-endpoint>:3306/godamm?useSSL=true&requireSSL=true&serverTimezone=UTC
+- Set DB_USERNAME and DB_PASSWORD to your RDS credentials.
+- In AWS security groups, allow MySQL port 3306 from your EC2 instance security group (not from 0.0.0.0/0).
+- You can keep MYSQL_* values unchanged because backend will use DB_* values.
 
 ## 4) Start backend stack
 
@@ -58,6 +66,10 @@ bash deploy/ec2-single-node/deploy-app.sh
 ```
 
 This pulls the configured backend image tag (for example a commit SHA) and starts mysql, redis, and backend containers.
+
+Deployment behavior:
+- If DB_URL points to mysql container (local mode), deploy starts mysql + redis + backend.
+- If DB_URL points to external host (RDS mode), deploy starts redis + backend and skips mysql container.
 
 ## 5) Configure Nginx
 

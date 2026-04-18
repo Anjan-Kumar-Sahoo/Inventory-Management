@@ -85,7 +85,6 @@ jobs:
             fi
 
             export BACKEND_IMAGE=${{ env.DOCKERHUB_USERNAME }}/godamm-backend:${{ github.sha }}
-            docker compose pull backend
-            docker compose up -d mysql redis
-            docker compose up -d --no-build backend
+            chmod +x deploy/ec2-single-node/deploy-app.sh
+            bash deploy/ec2-single-node/deploy-app.sh
             docker image prune -f

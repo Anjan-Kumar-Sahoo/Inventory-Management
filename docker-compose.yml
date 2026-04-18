@@ -60,9 +60,9 @@ services:
     env_file:
       - .env
     environment:
-      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-inventory_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      DB_USERNAME: ${MYSQL_USER:-inventory_app}
-      DB_PASSWORD: ${MYSQL_PASSWORD:-change_this_app_password}
+      DB_URL: ${DB_URL:-jdbc:mysql://mysql:3306/inventory_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+      DB_USERNAME: ${DB_USERNAME:-inventory_app}
+      DB_PASSWORD: ${DB_PASSWORD:-change_this_app_password}
       JWT_SECRET: ${JWT_SECRET:-ChangeThisJwtSecretKeyToAtLeast32CharsLong1234}
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -74,8 +74,6 @@ services:
       REQUIRE_HTTPS: ${REQUIRE_HTTPS:-true}
       SERVER_PORT: 8080
     depends_on:
-      mysql:
-        condition: service_healthy
       redis:
         condition: service_healthy
     ports:

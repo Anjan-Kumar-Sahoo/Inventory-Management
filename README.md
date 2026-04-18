@@ -150,7 +150,7 @@ npm run dev
 - Health check endpoint: /actuator/health
 - Compose stack includes:
 	- backend
-	- mysql (persistent volume)
+	- mysql (persistent volume, optional when using external RDS)
 	- redis (password-protected)
 
 ## CI/CD (GitHub Actions)
@@ -197,6 +197,20 @@ Enable HTTPS:
 ```bash
 sudo certbot --nginx -d api.godamm.mraks.dev
 ```
+
+### Using AWS RDS MySQL (optional)
+
+Set these values in EC2 `.env`:
+
+- DB_URL=jdbc:mysql://<rds-endpoint>:3306/godamm?useSSL=true&requireSSL=true&serverTimezone=UTC
+- DB_USERNAME=<rds-username>
+- DB_PASSWORD=<rds-password>
+
+Notes:
+
+- Allow port 3306 in RDS security group from the EC2 security group.
+- Keep `BACKEND_IMAGE` pinned to a commit SHA tag.
+- `deploy/ec2-single-node/deploy-app.sh` will skip local mysql container automatically when DB_URL is external.
 
 ## Security Hardening
 
