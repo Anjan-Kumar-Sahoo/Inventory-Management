@@ -7,6 +7,9 @@ export const ROUTES = {
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',
     VERIFY_OTP: '/auth/verify-otp',
+    FORGOT_PASSWORD: '/auth/forgot-password',
+    FORGOT_PASSWORD_OTP: '/auth/forgot-password/verify-otp',
+    RESET_PASSWORD: '/auth/reset-password',
   },
   APP: {
     ROOT: '/app',

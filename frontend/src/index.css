@@ -363,6 +363,29 @@
     color: #FFFFFF !important;
   }
 
+  :root.light .auth-shell input,
+  :root.light .auth-shell textarea,
+  :root.light .auth-shell select {
+    color: var(--on-surface) !important;
+  }
+
+  :root.light .auth-shell input::placeholder,
+  :root.light .auth-shell textarea::placeholder {
+    color: var(--on-surface-low) !important;
+    opacity: 0.6 !important;
+  }
+
+  :root.light .auth-shell input:-webkit-autofill,
+  :root.light .auth-shell input:-webkit-autofill:hover,
+  :root.light .auth-shell input:-webkit-autofill:focus,
+  :root.light .auth-shell textarea:-webkit-autofill,
+  :root.light .auth-shell textarea:-webkit-autofill:hover,
+  :root.light .auth-shell textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--on-surface) !important;
+    box-shadow: 0 0 0 1000px #ffffff inset !important;
+    transition: background-color 9999s ease-out 0s;
+  }
+
   .theme-gradient {
     position: fixed;
     inset: 0;

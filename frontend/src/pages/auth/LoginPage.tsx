@@ -7,9 +7,15 @@ interface LoginPageProps {
   darkMode: boolean;
   onToggleTheme: () => void;
   onGoToRegister: () => void;
+  onGoToForgotPassword: () => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleTheme, onGoToRegister }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({
+  darkMode,
+  onToggleTheme,
+  onGoToRegister,
+  onGoToForgotPassword,
+}) => {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,38 +43,47 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleTheme, o
       onToggleTheme={onToggleTheme}
     >
       <div className="mb-8">
-         <h2 className="text-3xl font-black text-[#DFE2F3] uppercase tracking-tighter mb-1">Welcome Back</h2>
-         <p className="text-xs text-[#CBC3D9] opacity-40 uppercase tracking-[0.2em] font-bold">Login to continue</p>
+         <h2 className="text-3xl font-black text-[var(--on-surface)] uppercase tracking-tighter mb-1">Welcome Back</h2>
+         <p className="text-xs text-[var(--on-surface-low)] opacity-80 uppercase tracking-[0.2em] font-bold">Login to continue</p>
       </div>
 
       <form className="space-y-6" onSubmit={handleSubmit}>
         <div className="space-y-2 group">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#CBC3D9] opacity-60 ml-1 group-focus-within:text-[#CDBDFF] transition-colors">Email</label>
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--on-surface-low)] opacity-80 ml-1 group-focus-within:text-[#CDBDFF] transition-colors">Email</label>
           <div className="relative">
-             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#CBC3D9] opacity-30 group-focus-within:text-[#CDBDFF] group-focus-within:opacity-100 transition-all" />
+             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--on-surface-low)] opacity-60 group-focus-within:text-[#CDBDFF] group-focus-within:opacity-100 transition-all" />
              <input 
                value={email} 
                onChange={e => setEmail(e.target.value)} 
                type="email" 
                required 
                placeholder="owner@shop.com"
-               className="w-full pl-12 pr-4 py-4 rounded-xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] focus:border-[#CDBDFF] focus:ring-1 focus:ring-[#CDBDFF]/20 outline-none text-[#DFE2F3] font-bold tracking-wider placeholder:text-[#CBC3D9] placeholder:opacity-10 transition-all" 
+               className="w-full pl-12 pr-4 py-4 rounded-xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] focus:border-[#CDBDFF] focus:ring-1 focus:ring-[#CDBDFF]/20 outline-none text-[var(--on-surface)] font-bold tracking-wider placeholder:text-[var(--on-surface-low)] placeholder:opacity-60 transition-all" 
              />
           </div>
         </div>
 
         <div className="space-y-2 group">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#CBC3D9] opacity-60 ml-1 group-focus-within:text-[#CDBDFF] transition-colors">Password</label>
+          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--on-surface-low)] opacity-80 ml-1 group-focus-within:text-[#CDBDFF] transition-colors">Password</label>
           <div className="relative">
-             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#CBC3D9] opacity-30 group-focus-within:text-[#CDBDFF] group-focus-within:opacity-100 transition-all" />
+             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--on-surface-low)] opacity-60 group-focus-within:text-[#CDBDFF] group-focus-within:opacity-100 transition-all" />
              <input 
                value={password} 
                onChange={e => setPassword(e.target.value)} 
                type="password" 
                required 
                placeholder="••••••••"
-               className="w-full pl-12 pr-4 py-4 rounded-xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] focus:border-[#CDBDFF] focus:ring-1 focus:ring-[#CDBDFF]/20 outline-none text-[#DFE2F3] font-bold tracking-wider placeholder:text-[#CBC3D9] placeholder:opacity-20 transition-all" 
+               className="w-full pl-12 pr-4 py-4 rounded-xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] focus:border-[#CDBDFF] focus:ring-1 focus:ring-[#CDBDFF]/20 outline-none text-[var(--on-surface)] font-bold tracking-wider placeholder:text-[var(--on-surface-low)] placeholder:opacity-60 transition-all" 
              />
+          </div>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={onGoToForgotPassword}
+              className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--on-surface-low)] hover:text-[var(--on-surface)] transition-colors"
+            >
+              FORGOT PASSWORD?
+            </button>
           </div>
         </div>
 
@@ -105,7 +120,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ darkMode, onToggleTheme, o
         <button 
           type="button" 
           onClick={onGoToRegister} 
-          className="w-full py-4 rounded-xl border border-[rgba(255,255,255,0.05)] text-[#CBC3D9] hover:text-[#DFE2F3] hover:bg-[rgba(255,255,255,0.02)] transition-all flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest"
+          className="w-full py-4 rounded-xl border border-[rgba(255,255,255,0.05)] text-[var(--on-surface-low)] hover:text-[var(--on-surface)] hover:bg-[rgba(255,255,255,0.02)] transition-all flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest"
         >
           <UserPlus className="w-4 h-4" />
           CREATE NEW ACCOUNT

@@ -154,7 +154,7 @@ const SellProduct: React.FC = () => {
             <input
               type="text"
               placeholder="IDENTITY SCAN..."
-              className="w-full bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-2xl p-4 pl-6 text-sm font-bold tracking-widest text-white placeholder:text-[#CBC3D9]/20 focus:ring-1 focus:ring-[#BDF4FF] transition-all"
+              className="w-full bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-2xl p-4 pl-6 text-sm font-bold tracking-widest text-[var(--on-surface)] placeholder:text-[var(--on-surface-low)] placeholder:opacity-70 focus:ring-1 focus:ring-[#BDF4FF] transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -196,7 +196,7 @@ const SellProduct: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-[10px] font-bold text-[#CBC3D9] uppercase tracking-[0.2em] opacity-40 mt-8">Selected for Outbound</h3>
+            <h3 className="text-[10px] font-bold text-[var(--on-surface-low)] uppercase tracking-[0.2em] mt-8">Selected for Outbound</h3>
             <div className="space-y-3">
               <AnimatePresence>
                 {selectedProducts.map(item => (
@@ -238,7 +238,7 @@ const SellProduct: React.FC = () => {
                 ))}
               </AnimatePresence>
               {selectedProducts.length === 0 && (
-                <div className="py-12 text-center border-2 border-dashed border-[rgba(255,255,255,0.03)] rounded-2xl font-bold text-[#CBC3D9] opacity-20 uppercase tracking-widest text-xs">
+                <div className="py-12 text-center border-2 border-dashed border-[var(--border)] rounded-2xl font-bold text-[var(--on-surface-low)] uppercase tracking-widest text-xs opacity-70">
                   Empty Manifest
                 </div>
               )}
@@ -270,10 +270,10 @@ const SellProduct: React.FC = () => {
           <button
             onClick={handleSell}
             disabled={selectedProducts.length === 0}
-            className="w-full btn-primary !from-[#BDF4FF] !to-[#22D3EE] !text-[#17004b] py-6 text-lg tracking-[0.2em] shadow-[0_0_30px_rgba(34,211,238,0.3)] disabled:opacity-20 disabled:grayscale disabled:pointer-events-none"
+            className="w-full btn-primary !from-emerald-500 !to-green-500 !text-white py-6 text-lg tracking-[0.2em] shadow-[0_0_30px_rgba(16,185,129,0.35)] disabled:opacity-20 disabled:grayscale disabled:pointer-events-none"
           >
             <ShoppingCart className="w-6 h-6 mr-2" />
-            COMPILE TRANSACTION
+            COMPLETE TRANSACTION
           </button>
 
           {message && (

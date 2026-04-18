@@ -79,7 +79,7 @@ export const ProfitDisplay: React.FC = () => {
       </div>
       <div className="flex items-center mb-2">
         <IndianRupee className="w-8 h-8 text-green-500 mr-4" />
-        <p className="text-3xl font-bold text-[var(--on-surface)]">₹{profit.toLocaleString('en-IN')}</p>
+        <p className="text-3xl font-bold text-[var(--on-surface)]">{profit.toLocaleString('en-IN')}</p>
       </div>
       {lastReset && (
         <p className="text-xs text-[var(--on-surface-low)]">Last reset: {lastReset}</p>

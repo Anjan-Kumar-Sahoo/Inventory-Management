@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Plus, Search, Users, Network, Trash2, X } from 'lucide-react';
+import { Plus, Search, Users } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
 import { SupplierTable } from '../components/suppliers/SupplierTable';
 import { SupplierForm } from '../components/suppliers/SupplierForm';
 import { ErrorDialog } from '../components/common/ErrorDialog';
+import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { Supplier } from '../types/inventory';
 
 interface SupplierManagerProps {
@@ -14,6 +15,7 @@ export const SupplierManager: React.FC<SupplierManagerProps> = ({ onNavigateToPr
   const { suppliers, addSupplier, updateSupplier, deleteSupplier, supplierDeleteError, clearSupplierDeleteError, products, setFilterBySupplierId } = useInventory();
   const [showForm, setShowForm] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [deletingSupplier, setDeletingSupplier] = useState<Supplier | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredSuppliers = suppliers.filter(supplier =>
@@ -39,6 +41,23 @@ export const SupplierManager: React.FC<SupplierManagerProps> = ({ onNavigateToPr
   const handleCancel = () => {
     setShowForm(false);
     setEditingSupplier(null);
+  };
+
+  const handleDeleteClick = (id: string) => {
+    const selectedSupplier = suppliers.find((supplier) => supplier.id === id) || null;
+    setDeletingSupplier(selectedSupplier);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingSupplier) {
+      return;
+    }
+
+    try {
+      await deleteSupplier(deletingSupplier.id);
+    } finally {
+      setDeletingSupplier(null);
+    }
   };
 
   const handleViewProducts = () => {
@@ -112,11 +131,19 @@ export const SupplierManager: React.FC<SupplierManagerProps> = ({ onNavigateToPr
              <SupplierTable
                suppliers={filteredSuppliers}
                onEdit={handleEdit}
-               onDelete={deleteSupplier}
+               onDelete={handleDeleteClick}
              />
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={Boolean(deletingSupplier)}
+        title="Are you sure?"
+        message={deletingSupplier ? `Delete supplier \"${deletingSupplier.name}\"?` : 'Are you sure?'}
+        onCancel={() => setDeletingSupplier(null)}
+        onConfirm={handleConfirmDelete}
+      />
 
       <ErrorDialog
         isOpen={!!supplierDeleteError}

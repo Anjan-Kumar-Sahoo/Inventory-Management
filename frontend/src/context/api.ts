@@ -1,7 +1,16 @@
 import { Product, Supplier } from '../types/inventory';
-import { AuthResponse, LoginRequest, RegisterRequest, VerifyOtpRequest } from '../types/auth';
+import {
+  AuthResponse,
+  ForgotPasswordRequest,
+  LoginRequest,
+  RegisterRequest,
+  ResetPasswordRequest,
+  VerifyOtpRequest,
+} from '../types/auth';
 
-const API_HOST = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const API_HOST =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? 'http://localhost:8080' : window.location.origin);
 const API_BASE_URL = `${API_HOST}/api`;
 const AUTH_BASE_URL = `${API_HOST}/auth`;
 
@@ -51,13 +60,40 @@ export async function register(request: RegisterRequest): Promise<{ message: str
   return handleJsonResponse(response, 'Registration failed');
 }
 
-export async function verifyOtp(request: VerifyOtpRequest): Promise<{ message: string }> {
+export async function verifyOtp(request: VerifyOtpRequest): Promise<AuthResponse> {
   const response = await fetch(`${AUTH_BASE_URL}/verify-otp`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request)
   });
   return handleJsonResponse(response, 'OTP verification failed');
+}
+
+export async function requestPasswordResetOtp(request: ForgotPasswordRequest): Promise<{ message: string }> {
+  const response = await fetch(`${AUTH_BASE_URL}/forgot-password/request`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
+  });
+  return handleJsonResponse(response, 'Failed to send password reset OTP');
+}
+
+export async function verifyForgotPasswordOtp(request: VerifyOtpRequest): Promise<{ message: string }> {
+  const response = await fetch(`${AUTH_BASE_URL}/forgot-password/verify-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
+  });
+  return handleJsonResponse(response, 'Failed to verify OTP');
+}
+
+export async function resetForgotPassword(request: ResetPasswordRequest): Promise<{ message: string }> {
+  const response = await fetch(`${AUTH_BASE_URL}/forgot-password/reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request)
+  });
+  return handleJsonResponse(response, 'Failed to reset password');
 }
 
 export async function login(request: LoginRequest): Promise<AuthResponse> {
@@ -89,7 +125,7 @@ export async function fetchSupplierById(id: string) {
   return handleJsonResponse<Supplier>(response, 'Failed to fetch supplier');
 }
 
-export async function addProduct(product: Omit<Product, 'id'>) {
+export async function addProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) {
   const response = await authFetch('/products', {
     method: 'POST',
     body: JSON.stringify(product)

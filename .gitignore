@@ -64,6 +64,8 @@ target/
 build/
 out/
 backend/target/
+backend/target/classes/
+backend/target/maven-status/
 backend/build/
 backend/out/
 backend/.mvn/timing.properties

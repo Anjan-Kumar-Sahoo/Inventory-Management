@@ -2,10 +2,34 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import * as api from './api';
 import { Product, Supplier, InventoryStats } from '../types/inventory';
 
+const LOW_STOCK_RISK_LIMIT_STORAGE_KEY = 'inventory.lowStockRiskLimit';
+const DEFAULT_LOW_STOCK_RISK_LIMIT = 10;
+
+const sanitizeLowStockRiskLimit = (value: number): number => {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_LOW_STOCK_RISK_LIMIT;
+  }
+
+  return Math.min(999, Math.max(1, Math.trunc(value)));
+};
+
+const readStoredLowStockRiskLimit = (): number => {
+  if (typeof window === 'undefined') {
+    return DEFAULT_LOW_STOCK_RISK_LIMIT;
+  }
+
+  const storedValue = window.localStorage.getItem(LOW_STOCK_RISK_LIMIT_STORAGE_KEY);
+  if (!storedValue) {
+    return DEFAULT_LOW_STOCK_RISK_LIMIT;
+  }
+
+  return sanitizeLowStockRiskLimit(Number(storedValue));
+};
+
 interface InventoryContextType {
   products: Product[];
   suppliers: Supplier[];
-  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
+  addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateProduct: (id: string, product: Partial<Product>) => Promise<void>;
   updateProductsStock: (updates: Array<{ id: string; stock: number }>) => void;
   deleteProduct: (id: string) => Promise<void>;
@@ -17,6 +41,8 @@ interface InventoryContextType {
   clearSupplierDeleteError: () => void;
   filterBySupplierId: string | null;
   setFilterBySupplierId: (id: string | null) => void;
+  lowStockRiskLimit: number;
+  setLowStockRiskLimit: (limit: number) => void;
   refreshData: () => Promise<void>;
 }
 
@@ -37,7 +63,12 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [error, setError] = useState<string | null>(null);
   const [supplierDeleteError, setSupplierDeleteError] = useState<{ message: string; supplierId?: string } | null>(null);
   const [filterBySupplierId, setFilterBySupplierId] = useState<string | null>(null);
+  const [lowStockRiskLimit, setLowStockRiskLimitState] = useState<number>(readStoredLowStockRiskLimit);
   const clearSupplierDeleteError = () => setSupplierDeleteError(null);
+
+  const setLowStockRiskLimit = useCallback((limit: number) => {
+    setLowStockRiskLimitState(sanitizeLowStockRiskLimit(limit));
+  }, []);
 
   const normalizeProduct = (p: any): Product => ({
     ...p,
@@ -70,21 +101,29 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     loadData();
   }, [loadData]);
 
-  const addProduct = async (productData: Omit<Product, 'id'>) => {
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(LOW_STOCK_RISK_LIMIT_STORAGE_KEY, String(lowStockRiskLimit));
+    }
+  }, [lowStockRiskLimit]);
+
+  const addProduct = async (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const stockValue = Number((productData as any).stock ?? productData.quantity ?? 0);
     const normalizedRequest: any = {
       ...productData,
-      stock: (productData as any).stock ?? productData.quantity ?? 0,
-      supplierId: productData.supplierId || null,
+      stock: Number.isFinite(stockValue) ? Math.max(0, Math.trunc(stockValue)) : 0,
+      supplierId: productData.supplierId ? Number(productData.supplierId) : null,
     };
     const newProduct = await api.addProduct(normalizedRequest);
     setProducts(prev => [...prev, normalizeProduct(newProduct)]);
   };
 
   const updateProduct = async (id: string, productData: Partial<Product>) => {
+    const stockValue = Number((productData as any).stock ?? productData.quantity ?? 0);
     const normalizedRequest: any = {
       ...productData,
-      stock: typeof (productData as any).stock !== 'undefined' ? (productData as any).stock : productData.quantity,
-      supplierId: productData.supplierId || null,
+      stock: Number.isFinite(stockValue) ? Math.max(0, Math.trunc(stockValue)) : 0,
+      supplierId: productData.supplierId ? Number(productData.supplierId) : null,
     };
     await api.updateProduct(id, normalizedRequest);
     // Optimistic update + fetch latest to be sure
@@ -133,8 +172,14 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
   const getInventoryStats = (): InventoryStats => {
     const totalProducts = products.length;
     const totalValue = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
-    const lowStockItems = products.filter(p => p.quantity > 0 && p.quantity < 10).length;
-    const outOfStockItems = products.filter(p => p.quantity === 0).length;
+    const lowStockItems = products.filter(p => {
+      const stock = (p as any).stock ?? p.quantity;
+      return stock > 0 && stock <= lowStockRiskLimit;
+    }).length;
+    const outOfStockItems = products.filter(p => {
+      const stock = (p as any).stock ?? p.quantity;
+      return stock === 0;
+    }).length;
 
     return { totalProducts, totalValue, lowStockItems, outOfStockItems };
   };
@@ -155,6 +200,8 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
       clearSupplierDeleteError,
       filterBySupplierId,
       setFilterBySupplierId,
+      lowStockRiskLimit,
+      setLowStockRiskLimit,
       refreshData: loadData
     }}>
       {children}

@@ -1,15 +1,20 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import * as api from './api';
 import { AuthResponse, AuthUser, LoginRequest, RegisterRequest } from '../types/auth';
+
+type OtpFlow = 'register' | 'forgot-password' | null;
 
 interface AuthContextType {
   user: AuthUser | null;
   token: string | null;
   pendingEmail: string;
+  otpFlow: OtpFlow;
   isAuthenticated: boolean;
   login: (request: LoginRequest) => Promise<void>;
   register: (request: RegisterRequest) => Promise<void>;
+  startForgotPassword: (email: string) => Promise<void>;
   verifyOtp: (otp: string) => Promise<void>;
+  resetForgotPassword: (newPassword: string) => Promise<void>;
   updateStoreName: (newName: string) => Promise<void>;
   logout: () => void;
   setPendingEmail: (email: string) => void;
@@ -51,6 +56,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(JWT_STORAGE_KEY));
   const [user, setUser] = useState<AuthUser | null>(() => readStoredUser());
   const [pendingEmail, setPendingEmail] = useState('');
+  const [otpFlow, setOtpFlow] = useState<OtpFlow>(null);
+  const [verifiedResetOtp, setVerifiedResetOtp] = useState('');
 
   const login = async (request: LoginRequest) => {
     const response = await api.login(request);
@@ -61,14 +68,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (request: RegisterRequest) => {
     await api.register(request);
-    setPendingEmail(request.email);
+    setPendingEmail(request.email.trim().toLowerCase());
+    setOtpFlow('register');
+    setVerifiedResetOtp('');
+  };
+
+  const startForgotPassword = async (email: string) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    await api.requestPasswordResetOtp({ email: normalizedEmail });
+    setPendingEmail(normalizedEmail);
+    setOtpFlow('forgot-password');
+    setVerifiedResetOtp('');
   };
 
   const verifyOtp = async (otp: string) => {
     if (!pendingEmail) {
       throw new Error('No email available for OTP verification. Please register again.');
     }
-    await api.verifyOtp({ email: pendingEmail, otp });
+
+    if (otpFlow === 'forgot-password') {
+      await api.verifyForgotPasswordOtp({ email: pendingEmail, otp });
+      setVerifiedResetOtp(otp);
+      return;
+    }
+
+    const response = await api.verifyOtp({ email: pendingEmail, otp });
+    persistAuth(response);
+    setToken(response.token);
+    setUser({ userId: response.userId, email: response.email, storeName: response.storeName });
+    setPendingEmail('');
+    setOtpFlow(null);
+    setVerifiedResetOtp('');
+  };
+
+  const resetForgotPassword = async (newPassword: string) => {
+    if (!pendingEmail || !verifiedResetOtp || otpFlow !== 'forgot-password') {
+      throw new Error('Password reset session not found. Please request OTP again.');
+    }
+
+    await api.resetForgotPassword({
+      email: pendingEmail,
+      otp: verifiedResetOtp,
+      newPassword,
+    });
+
+    setPendingEmail('');
+    setOtpFlow(null);
+    setVerifiedResetOtp('');
   };
 
   const updateStoreName = async (newName: string) => {
@@ -83,20 +129,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(null);
     setUser(null);
     setPendingEmail('');
+    setOtpFlow(null);
+    setVerifiedResetOtp('');
   };
 
-  const value = useMemo(() => ({
+  const value = {
     user,
     token,
     pendingEmail,
+    otpFlow,
     isAuthenticated: Boolean(token && user),
     login,
     register,
+    startForgotPassword,
     verifyOtp,
+    resetForgotPassword,
     updateStoreName,
     logout,
     setPendingEmail
-  }), [user, token, pendingEmail]);
+  };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

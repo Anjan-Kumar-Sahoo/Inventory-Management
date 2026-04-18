@@ -46,22 +46,38 @@ We have moved away from traditional spreadsheet-link designs. The system now fol
 - **Design Tokens**:
   - `src/index.css`: Base tokens + light-mode accent overrides for hardcoded Tailwind color utilities.
 - **Contexts**:
-  - `AuthContext`: Manages JWT sessions, user info, and authentication state.
+  - `AuthContext`: Manages JWT sessions, user info, registration OTP flow, and forgot-password OTP reset flow state.
   - `InventoryContext`: Manages products, suppliers, and sales data.
 - **Key Pages**:
   - `Dashboard.tsx`: Overview with key metrics.
   - `ProductManager.tsx`: Full CRUD for products.
   - `SupplierManager.tsx`: Full CRUD for suppliers.
   - `SellProduct.tsx`: Transaction-focused interface.
-  - `auth/`: Contains Login, Register, and OTP verification logic.
+  - `auth/`: Contains Login, Register, registration OTP verification, Forgot Password, Forgot Password OTP, and Reset Password pages.
+  - `components/auth/PasswordFieldWithRules.tsx`: Reusable password field with live rules and eye toggle.
 
 ### ⚙️ Backend (Spring Boot)
-- **Base Package**: `com.yourcompany.inventory`
+- **Base Package**: `com.avaks.inventory`
 - **Key Modules**:
   - `entity/`: Product, Supplier, User, Otp.
   - `controller/`: REST endpoints for all entities.
-  - `service/`: Business logic (OTP generation, sale processing).
+  - `service/`: Business logic (OTP generation, sale processing, registration/forgot-password auth workflows).
   - `security/`: JWT filtering and authentication configuration.
+  - `config/`: Runtime configuration (security/auth + app wiring), including cache provider setup.
+- **Caching Model**:
+  - Spring Cache abstraction is enabled with per-user cache keys for products, suppliers, and dashboard profit reads.
+  - Cache provider is selectable (`simple` local in-memory by default, `redis` when configured via environment).
+  - Write paths (product/supplier CRUD and sales mutations) evict affected cache entries to preserve consistency.
+- **Deployment Operations**:
+  - EC2 single-node deployment assets are located in `deploy/ec2-single-node/`.
+  - Includes host bootstrap (swap + Docker + Nginx + Certbot), Docker Compose deploy script, systemd unit templates, nginx reverse-proxy template, and deployment runbook.
+- **Data Isolation Model**:
+  - Inventory entities (`Supplier`, `Product`, `Sale`, `ProfitRecord`, `Order`) are user-owned via `user_id`.
+  - Repository/service methods are user-scoped to enforce per-login store isolation.
+
+### 🌐 Domain Topology
+- **Frontend (Vercel)**: `godamm.mraks.dev`, `godamm.anjaliv.dev`
+- **Backend API (EC2 + Nginx)**: `api.godamm.mraks.dev`
 
 ---
 
@@ -71,6 +87,14 @@ We have moved away from traditional spreadsheet-link designs. The system now fol
 We use atomic SQL updates for stock management to prevent race conditions during high-volume sales.
 - **Atomic Decrement**: `ProductRepository.decrementStock` ensures stock only decreases if sufficient quantity exists, preventing "Double Sell" scenarios.
 - **Optimized Profit Tracking**: The system maintains an incremental `ProfitRecord` rather than re-calculating the entire sales history, ensuring O(1) performance for profit reporting.
+
+### 🔐 Tenant Data Safety
+- Store data is isolated per authenticated user, preventing cross-account visibility or writes.
+- Stock decrements and sales/profit updates are scoped to the owner (`decrementStockForUser`) to keep transactional integrity in multi-user usage.
+
+### 🧪 Startup Data Policy
+- Automatic startup demo-data reset is disabled by default.
+- Existing user inventory is preserved across restarts unless changed explicitly through APIs.
 
 ---
 
@@ -105,6 +129,39 @@ We use atomic SQL updates for stock management to prevent race conditions during
 - [x] Convert dashboard profit and low-stock cards to theme-variable surfaces (no hardcoded white cards in dark mode).
 - [x] Make header navigation solid for stronger visual stability.
 - [x] Update footer copy to: "Godamm - Made in Love  - An Inventory Management System".
+
+### 📅 Phase 6: Multi-Tenant Data Isolation (Completed)
+- [x] Add `user_id` ownership to inventory domain entities.
+- [x] Scope repository and service operations to authenticated user ownership.
+
+### 📅 Phase 7: Data Safety + Light Theme Readability (Completed)
+- [x] Disable startup test-data seeding by default (`app.seed-test-data=false`).
+- [x] Remove runtime startup seeder component to avoid unintended inventory resets.
+- [x] Improve light-theme input/readability for header store-name editing and auth forms (Login/Register/OTP).
+
+### 📅 Phase 8: Auth Flow Expansion (Completed)
+- [x] Registration OTP verification now returns JWT auth payload and logs users directly into the app.
+- [x] Add forgot-password recovery flow: request OTP, verify OTP, then set new password.
+- [x] Add reusable password constraints UI with eye-toggle and enforce strong-password rules in register/reset backend paths.
+
+### 📅 Phase 9: Backend Read Cache Foundation (Completed)
+- [x] Add Spring Cache + Redis dependencies and provider toggle (`app.cache.provider`).
+- [x] Add cache configuration with per-cache TTL profiles and local fallback cache manager.
+- [x] Cache user-scoped reads for products/suppliers/profit and evict on product, supplier, and sale writes.
+
+### 📅 Phase 10: EC2 Single-Node Deployment Pack (Completed)
+- [x] Add `deploy/ec2-single-node/setup-ec2-4gb.sh` for package install, swap tuning, Docker/Compose setup, and Nginx/Certbot host prep.
+- [x] Add `docker-compose.yml` for backend + MySQL + Redis with persistent volumes and health checks.
+- [x] Add `deploy/ec2-single-node/inventory-backend.service` and `deploy/ec2-single-node/godown-stack.service` for managed Docker Compose startup.
+- [x] Add `deploy/ec2-single-node/nginx-inventory.conf` for API-only reverse proxy on `api.godamm.mraks.dev` with HTTPS and security headers.
+- [x] Add `deploy/ec2-single-node/deploy-app.sh`, backend env template, and deployment README for repeatable publish flow.
+
+### 📅 Phase 11: Production Hardening + CI/CD (Completed)
+- [x] Add backend multi-stage Dockerfile (`openjdk:17-jdk-slim` runtime) and healthcheck integration (`/actuator/health`).
+- [x] Add GitHub Actions workflow for backend build/test, Docker Hub push, and EC2 SSH deploy.
+- [x] Expand backend runtime config with strict env-driven CORS, optional HTTPS enforcement, Redis-backed rate limiting, Hikari pooling, and actuator metrics exposure.
+- [x] Add validation constraints to inventory DTOs and controller request payloads for stronger API safety.
+- [x] Update root README with architecture diagram, env variables, deployment path, and one-command deploy flow.
 
 ---
 

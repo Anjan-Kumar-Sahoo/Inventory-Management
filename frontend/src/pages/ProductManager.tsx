@@ -1,50 +1,70 @@
 import React, { useState } from 'react';
-import { Plus, Box, Filter, X } from 'lucide-react';
+import { Plus, Box } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
 import { ProductTable } from '../components/products/ProductTable';
 import { ProductForm } from '../components/products/ProductForm';
-import { SearchFilter } from '../components/common/SearchFilter';
+import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { Product } from '../types/inventory';
 
 export const ProductManager: React.FC = () => {
-  const { products, addProduct, updateProduct, deleteProduct, suppliers, filterBySupplierId, setFilterBySupplierId } = useInventory();
+  const { products, addProduct, updateProduct, deleteProduct } = useInventory();
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const categories = Array.from(new Set(products.map(p => p.category)));
-
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.sku.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !categoryFilter || product.category === categoryFilter;
-    const matchesSupplier = !filterBySupplierId || product.supplierId === filterBySupplierId;
-    return matchesSearch && matchesCategory && matchesSupplier;
-  });
-
-  const filteredSupplierName = filterBySupplierId
-    ? suppliers.find(s => s.id === filterBySupplierId)?.name
-    : null;
+  const handleAddProduct = () => {
+    setEditingProduct(null);
+    setFormError(null);
+    setShowForm(true);
+  };
 
   const handleEdit = (product: Product) => {
+    setFormError(null);
     setEditingProduct(product);
     setShowForm(true);
   };
 
-  const handleFormSubmit = (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
-    if (editingProduct) {
-      updateProduct(editingProduct.id, productData);
-    } else {
-      addProduct(productData);
+  const handleFormSubmit = async (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
+    setFormError(null);
+    try {
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, productData);
+      } else {
+        await addProduct(productData);
+      }
+      setShowForm(false);
+      setEditingProduct(null);
+    } catch (error) {
+      console.error('Failed to save product:', error);
+      setFormError('Could not save product. Please try again.');
     }
+  };
+
+  const handleCancel = () => {
+    setFormError(null);
     setShowForm(false);
     setEditingProduct(null);
   };
 
-  const handleCancel = () => {
-    setShowForm(false);
-    setEditingProduct(null);
+  const handleDeleteClick = (id: string) => {
+    const selectedProduct = products.find((product) => product.id === id) || null;
+    setDeletingProduct(selectedProduct);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingProduct) {
+      return;
+    }
+
+    try {
+      await deleteProduct(deletingProduct.id);
+    } catch (error) {
+      console.error('Failed to delete product:', error);
+      setFormError('Could not delete product. Please try again.');
+    } finally {
+      setDeletingProduct(null);
+    }
   };
 
   return (
@@ -63,7 +83,7 @@ export const ProductManager: React.FC = () => {
         </div>
 
         <button
-          onClick={() => setShowForm(true)}
+          onClick={handleAddProduct}
           className="btn-primary flex items-center gap-2 self-start md:self-auto"
         >
           <Plus className="w-5 h-5" />
@@ -71,38 +91,15 @@ export const ProductManager: React.FC = () => {
         </button>
       </div>
 
-      {/* Filters & Actions */}
-      <div className="space-y-4">
-        {filteredSupplierName && (
-          <div className="flex items-center gap-3 p-4 glass-card border-[rgba(189,244,255,0.1)] bg-[rgba(189,244,255,0.02)]">
-            <Filter className="w-4 h-4 text-[#BDF4FF]" />
-            <span className="text-xs font-semibold text-[#BDF4FF] uppercase tracking-wider">
-              Filtered by Supplier: <span className="text-white drop-shadow-[0_0_8px_rgba(189,244,255,0.5)]">{filteredSupplierName}</span>
-            </span>
-            <button
-              onClick={() => setFilterBySupplierId(null)}
-              className="ml-auto p-1 hover:bg-[rgba(255,255,255,0.05)] rounded transition-colors"
-            >
-              <X className="w-4 h-4 text-[#CBC3D9]" />
-            </button>
-          </div>
-        )}
-
-        <div className="glass-card p-4 border-[rgba(255,255,255,0.02)]">
-          <SearchFilter
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            categoryFilter={categoryFilter}
-            onCategoryChange={setCategoryFilter}
-            categories={categories}
-          />
-        </div>
-      </div>
-
       {/* Main Content Area */}
       <div className="relative">
         {showForm ? (
           <div className="glass-card p-8 border-[rgba(205,189,255,0.1)] relative z-20">
+            {formError && (
+              <div className="mb-4 rounded-lg border border-[rgba(255,68,68,0.2)] bg-[rgba(255,68,68,0.08)] px-4 py-3 text-sm font-medium text-red-300">
+                {formError}
+              </div>
+            )}
             <ProductForm
               product={editingProduct}
               onSubmit={handleFormSubmit}
@@ -113,16 +110,24 @@ export const ProductManager: React.FC = () => {
           <div className="glass-card border-[rgba(255,255,255,0.03)] overflow-hidden">
             <div className="bg-[rgba(255,255,255,0.02)] px-6 py-4 border-b border-[rgba(255,255,255,0.05)] flex items-center justify-between">
               <span className="text-[10px] font-bold text-[#CBC3D9] uppercase tracking-[0.2em]">Product List</span>
-              <span className="text-[10px] font-bold text-[#BDF4FF] bg-[rgba(189,244,255,0.1)] px-2 py-0.5 rounded-full ring-1 ring-[#BDF4FF]/20">{filteredProducts.length} PRODUCTS</span>
+              <span className="text-[10px] font-bold text-[#BDF4FF] bg-[rgba(189,244,255,0.1)] px-2 py-0.5 rounded-full ring-1 ring-[#BDF4FF]/20">{products.length} PRODUCTS</span>
             </div>
             <ProductTable
-              products={filteredProducts}
+              products={products}
               onEdit={handleEdit}
-              onDelete={deleteProduct}
+              onDelete={handleDeleteClick}
             />
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={Boolean(deletingProduct)}
+        title="Are you sure?"
+        message={deletingProduct ? `Delete product \"${deletingProduct.name}\"?` : 'Are you sure?'}
+        onCancel={() => setDeletingProduct(null)}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 };

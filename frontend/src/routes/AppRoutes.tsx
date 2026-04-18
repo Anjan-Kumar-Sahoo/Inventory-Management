@@ -7,6 +7,9 @@ import { SellProduct } from '../pages/SellProduct';
 import { RegisterPage } from '../pages/auth/RegisterPage';
 import { OtpVerificationPage } from '../pages/auth/OtpVerificationPage';
 import { LoginPage } from '../pages/auth/LoginPage';
+import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage';
+import { ForgotPasswordOtpPage } from '../pages/auth/ForgotPasswordOtpPage';
+import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
 import { AppShell } from '../layouts/AppShell';
 import { useAuth } from '../context/AuthContext';
 import { GuestRoute, ProtectedRoute } from './RouteGuards';
@@ -36,6 +39,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ darkMode, onToggleTheme })
               darkMode={darkMode}
               onToggleTheme={onToggleTheme}
               onGoToRegister={() => navigate(ROUTES.AUTH.REGISTER)}
+              onGoToForgotPassword={() => navigate(ROUTES.AUTH.FORGOT_PASSWORD)}
             />
           </GuestRoute>
         }
@@ -60,8 +64,47 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ darkMode, onToggleTheme })
             <OtpVerificationPage
               darkMode={darkMode}
               onToggleTheme={onToggleTheme}
-              onVerified={() => navigate(ROUTES.AUTH.LOGIN)}
+              onVerified={() => navigate(ROUTES.APP.DASHBOARD)}
               onBackToRegister={() => navigate(ROUTES.AUTH.REGISTER)}
+            />
+          </GuestRoute>
+        }
+      />
+      <Route
+        path={ROUTES.AUTH.FORGOT_PASSWORD}
+        element={
+          <GuestRoute>
+            <ForgotPasswordPage
+              darkMode={darkMode}
+              onToggleTheme={onToggleTheme}
+              onOtpRequested={() => navigate(ROUTES.AUTH.FORGOT_PASSWORD_OTP)}
+              onBackToLogin={() => navigate(ROUTES.AUTH.LOGIN)}
+            />
+          </GuestRoute>
+        }
+      />
+      <Route
+        path={ROUTES.AUTH.FORGOT_PASSWORD_OTP}
+        element={
+          <GuestRoute>
+            <ForgotPasswordOtpPage
+              darkMode={darkMode}
+              onToggleTheme={onToggleTheme}
+              onVerified={() => navigate(ROUTES.AUTH.RESET_PASSWORD)}
+              onBackToForgotPassword={() => navigate(ROUTES.AUTH.FORGOT_PASSWORD)}
+            />
+          </GuestRoute>
+        }
+      />
+      <Route
+        path={ROUTES.AUTH.RESET_PASSWORD}
+        element={
+          <GuestRoute>
+            <ResetPasswordPage
+              darkMode={darkMode}
+              onToggleTheme={onToggleTheme}
+              onPasswordReset={() => navigate(ROUTES.AUTH.LOGIN)}
+              onBackToLogin={() => navigate(ROUTES.AUTH.LOGIN)}
             />
           </GuestRoute>
         }

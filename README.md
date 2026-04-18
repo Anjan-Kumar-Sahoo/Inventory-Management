@@ -41,63 +41,210 @@ A full-stack inventory management application built with Spring Boot, MySQL, and
 
 1️⃣ **Clone the Repository**
 ```powershell
-git clone https://github.com/Anjan-Kumar-Sahoo/Inventory-Management.git
-cd Inventory-Management
+git clone https://github.com/Anjan-Kumar-Sahoo/GoDamm.git
+cd GoDamm
 ```
 
-2️⃣ **Backend Setup (Spring Boot)**
-```powershell
+# Godamm Inventory Management System
+
+Production-ready full-stack inventory platform with secure auth, OTP workflows, tenant-safe data isolation, Redis caching, and EC2/Vercel deployment support.
+
+## Live Domains
+
+- Frontend: https://godamm.mraks.dev
+- Frontend (secondary): https://godamm.anjaliv.dev
+- Backend API: https://api.godamm.mraks.dev
+
+## Architecture
+
+```mermaid
+flowchart LR
+		U[User Browser] --> V[Vercel Frontend\nReact + Vite]
+		V -->|HTTPS /api + /auth| N[Nginx on EC2]
+		N -->|Reverse proxy| B[Spring Boot Backend]
+		B --> M[(MySQL)]
+		B --> R[(Redis)]
+		B --> S[SMTP Provider]
+		G[GitHub Actions] --> D[Docker Hub]
+		G --> E[EC2 Deploy via SSH]
+		E --> N
+		E --> B
+```
+
+## Stack
+
+- Backend: Java 17, Spring Boot 3, Spring Security, JWT, Flyway, Redis Cache, Actuator
+- Frontend: React 18, TypeScript, Vite, Tailwind CSS, Framer Motion
+- Data: MySQL 8, Redis 7
+- DevOps: Docker, Docker Compose, GitHub Actions, Nginx, Certbot, AWS EC2
+
+## Repository Structure
+
+```text
+backend/                    Spring Boot application
+frontend/                   React + Vite application
+deploy/ec2-single-node/     EC2 scripts, Nginx config, service units
+.github/workflows/          CI/CD workflows
+docker-compose.yml          Backend + MySQL + Redis stack
+.env.example                Environment template
+```
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and fill real values.
+
+### Required backend variables
+
+- DB_URL
+- DB_USERNAME
+- DB_PASSWORD
+- JWT_SECRET
+- REDIS_HOST
+- REDIS_PORT
+- REDIS_PASSWORD
+- MAIL_USERNAME
+- MAIL_PASSWORD
+- CORS_ALLOWED_ORIGINS
+
+### Required frontend variable (Vercel)
+
+- VITE_API_BASE_URL=https://api.godamm.mraks.dev
+
+## Local Development
+
+### Option A: Full stack with Docker (recommended)
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+```
+
+Backend health:
+
+```bash
+curl -fsS http://localhost:8080/actuator/health
+```
+
+### Option B: Backend and frontend separately
+
+Backend:
+
+```bash
 cd backend
 mvn spring-boot:run
 ```
-Runs on [http://localhost:8080](http://localhost:8080) by default.
 
-Configure database in `application.properties`:
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/inventory_db
-spring.datasource.username=root
-spring.datasource.password=yourpassword
-```
+Frontend:
 
-3️⃣ **Frontend Setup (React)**
-```powershell
+```bash
 cd frontend
 npm install
-npm start
+npm run dev
 ```
-Runs on [http://localhost:3000](http://localhost:3000) by default.
 
----
+## Dockerization
 
-📊 **Database Schema**
+- Backend Dockerfile uses multi-stage build
+	- Build stage: Maven + JDK 17
+	- Runtime stage: openjdk:17-jdk-slim
+- Health check endpoint: /actuator/health
+- Compose stack includes:
+	- backend
+	- mysql (persistent volume)
+	- redis (password-protected)
 
-**Supplier Table**
-| id | name            | contact_person | email                | phone      | address         |
-|----|-----------------|----------------|----------------------|------------|-----------------|
-| 1  | Evergreen Foods | Rohit Sharma   | rohit@evergreen.com  | 9812345678 | 101 Park Street |
+## CI/CD (GitHub Actions)
 
-**Product Table**
-| id | name           | description         | price | stock | supplier_id |
-|----|----------------|---------------------|-------|-------|-------------|
-| 1  | Arabica Coffee | High-altitude beans | 750   | 40    | 1           |
+Workflow: `.github/workflows/backend.yml`
 
----
+Pipeline steps:
 
-📸 **Screenshots**
+1. Checkout
+2. Setup Java 17
+3. Build + test (`mvn clean verify`)
+4. Build Docker image
+5. Push image to Docker Hub
+6. SSH into EC2
+7. Pull commit-SHA image and restart backend container
 
+### Required GitHub Secrets
 
+- DOCKER_PASSWORD
+- EC2_HOST
+- EC2_USER
+- EC2_SSH_KEY
 
----
+## AWS EC2 Deployment
 
-✨ **Future Enhancements**
+Detailed runbook: `deploy/ec2-single-node/README.md`
 
-- 🔐 Role-based authentication (Admin/User)
-- 📈 Sales history tracking
-- 📤 Export reports (CSV/PDF)
-- 🐳 Docker containerization & deployment
+Quick path:
 
----
+```bash
+sudo bash deploy/ec2-single-node/setup-ec2-4gb.sh
+cd /opt/godown
+cp deploy/ec2-single-node/backend.env.example .env
+nano .env
+bash deploy/ec2-single-node/deploy-app.sh
+```
 
-📌 **Repo**
+Nginx config file:
 
-🔗 [https://github.com/Anjan-Kumar-Sahoo/Inventory-Management](https://github.com/Anjan-Kumar-Sahoo/Inventory-Management)
+- `deploy/ec2-single-node/nginx-inventory.conf`
+
+Enable HTTPS:
+
+```bash
+sudo certbot --nginx -d api.godamm.mraks.dev
+```
+
+## Security Hardening
+
+- Stateless JWT security
+- Strict env-driven CORS origin policy
+- Redis-backed rate limiting
+- Optional HTTPS enforcement via `REQUIRE_HTTPS=true`
+- Input validation on DTOs and auth payloads
+- Non-root app credentials for MySQL
+- No hardcoded secrets in source
+
+## Monitoring and Logging
+
+Actuator endpoints:
+
+- `/actuator/health`
+- `/actuator/metrics`
+
+Logging:
+
+- Console logs
+- File logs (`logs/inventory-app.log`)
+- Structured JSON-like log pattern
+
+## Performance Notes
+
+- Redis cache for product/supplier/profit reads
+- Cache eviction on writes
+- HikariCP pool tuning via env vars
+- 4 GB deployment profile tuned for small production usage
+
+## Testing
+
+Run backend tests:
+
+```bash
+cd backend
+mvn clean verify
+```
+
+CI fails on test/build failures by default.
+
+## One-command Deploy on EC2
+
+After bootstrap and `.env` setup:
+
+```bash
+bash deploy/ec2-single-node/deploy-app.sh
+```
+
+This pulls the commit-SHA backend image and applies container updates using Docker Compose.

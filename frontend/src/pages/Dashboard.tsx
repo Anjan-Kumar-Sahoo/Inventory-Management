@@ -1,13 +1,22 @@
 import React from 'react';
-import { Package, TrendingUp, AlertTriangle, DollarSign, Activity, Zap } from 'lucide-react';
+import { Package, TrendingUp, AlertTriangle, IndianRupee, Activity, Zap } from 'lucide-react';
 import { useInventory } from '../context/InventoryContext';
 import { StatCard } from '../components/common/StatCard';
 import { LowStockAlert } from '../components/dashboard/LowStockAlert';
 import { ProfitDisplay } from '../components/dashboard/ProfitDisplay';
 
 export const Dashboard: React.FC = () => {
-  const { getInventoryStats, products } = useInventory();
+  const { getInventoryStats, products, lowStockRiskLimit, setLowStockRiskLimit } = useInventory();
   const stats = getInventoryStats();
+
+  const handleLowStockRiskLimitChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const parsedLimit = Number(event.target.value);
+    if (!Number.isFinite(parsedLimit)) {
+      return;
+    }
+
+    setLowStockRiskLimit(parsedLimit);
+  };
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -36,18 +45,18 @@ export const Dashboard: React.FC = () => {
         />
         <StatCard
           title="Net Capital"
-          value={`₹${stats.totalValue.toLocaleString()}`}
-          icon={DollarSign}
+          value={`₹${stats.totalValue.toLocaleString('en-IN')}`}
+          icon={IndianRupee}
           color="green"
         />
         <StatCard
-          title="Low Stock Risk"
+          title={`Low Stock Risk (<= ${lowStockRiskLimit})`}
           value={stats.lowStockItems.toString()}
           icon={AlertTriangle}
           color="amber"
         />
         <StatCard
-          title="Stock Depletion"
+          title="Out of Stock"
           value={stats.outOfStockItems.toString()}
           icon={TrendingUp}
           color="red"
@@ -79,9 +88,31 @@ export const Dashboard: React.FC = () => {
            <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-[#CDBDFF] to-[#5D21DF] rounded-2xl blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
               <div className="relative">
-                 <LowStockAlert products={products} />
+                <LowStockAlert products={products} riskLimit={lowStockRiskLimit} />
               </div>
            </div>
+
+            <div className="glass-card p-5 border-[rgba(253,224,71,0.15)] bg-[rgba(253,224,71,0.04)]">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#FDE047]">Set Low Stock Limit</p>
+                  <p className="text-xs text-[#CBC3D9] opacity-80 mt-1">Low stock is counted from 1 to this limit.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="low-stock-limit" className="text-xs font-bold text-[#DFE2F3]">Limit</label>
+                  <input
+                   id="low-stock-limit"
+                   type="number"
+                   min={1}
+                   max={999}
+                   step={1}
+                   value={lowStockRiskLimit}
+                   onChange={handleLowStockRiskLimitChange}
+                   className="w-24 px-3 py-2 rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(253,224,71,0.25)] text-[#DFE2F3] font-bold focus:outline-none focus:ring-1 focus:ring-[#FDE047]"
+                  />
+                </div>
+              </div>
+            </div>
         </div>
       </div>
     </div>

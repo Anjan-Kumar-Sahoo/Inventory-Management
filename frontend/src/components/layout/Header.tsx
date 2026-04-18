@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
                     onChange={(e) => setNewStoreName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleUpdateStoreName()}
                     disabled={isUpdating}
-                    className="bg-[rgba(255,255,255,0.05)] border border-[#CDBDFF]/30 rounded px-2 py-0.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#CDBDFF] w-full"
+                    className="bg-[var(--surface)] border border-[var(--border)] rounded px-2 py-0.5 text-xs text-[var(--on-surface)] focus:outline-none focus:ring-1 focus:ring-[#CDBDFF] w-full"
                   />
                   <button onClick={handleUpdateStoreName} disabled={isUpdating} className="text-emerald-400 hover:scale-110">
                     <Check className="w-3 h-3" />
@@ -87,8 +87,8 @@ export const Header: React.FC<HeaderProps> = ({
               ) : (
                 <div className="flex items-center gap-2 group/name">
                   <div>
-                    <h1 className="text-sm font-black text-[#DFE2F3] uppercase tracking-tighter leading-none">{initialStoreName || 'My Shop'}</h1>
-                    <span className="text-[10px] text-[#CDBDFF] font-bold uppercase tracking-[0.2em] opacity-40">Inventory Management</span>
+                    <h1 className="text-sm font-black text-[#DFE2F3] tracking-tighter leading-none">{initialStoreName || 'My Shop'}</h1>
+                    <span className="text-[10px] text-[#CDBDFF] font-bold tracking-[0.2em] opacity-40">GoDamm</span>
                   </div>
                   <button 
                     onClick={() => setIsEditingStore(true)}

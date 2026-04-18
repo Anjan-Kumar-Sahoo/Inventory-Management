@@ -11,13 +11,16 @@ interface ProductFormProps {
 
 export const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }) => {
   const { suppliers } = useInventory();
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     name: '',
     price: '',
     sellingPrice: '',
     quantity: '',
     supplierId: '',
     description: ''
+  };
+  const [formData, setFormData] = useState({
+    ...initialFormData
   });
 
   useEffect(() => {
@@ -30,19 +33,26 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onC
         supplierId: product.supplierId ?? (product as any).supplier_id ?? '',
         description: product.description ?? ''
       });
+    } else {
+      setFormData(initialFormData);
     }
   }, [product]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const price = Number(formData.price);
+    const sellingPrice = Number(formData.sellingPrice);
+    const quantity = Number(formData.quantity);
+
     onSubmit({
       name: formData.name,
       sku: '',
       category: '',
-      price: parseFloat(formData.price),
-      sellingPrice: parseFloat(formData.sellingPrice),
+      price,
+      sellingPrice,
       cost: 0,
-      quantity: parseInt(formData.quantity),
+      quantity,
       minStock: 0,
       supplierId: formData.supplierId,
       description: formData.description
@@ -55,14 +65,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onC
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 transition-colors duration-300">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-medium text-gray-900">
+        <h3 className="text-lg font-semibold text-[var(--on-surface)]">
           {product ? 'Edit Product' : 'Add New Product'}
         </h3>
         <button
           onClick={onCancel}
-          className="text-gray-400 hover:text-gray-600 transition-colors duration-150"
+          className="text-[var(--on-surface-low)] hover:text-[var(--on-surface)] transition-colors duration-150"
         >
           <X className="w-5 h-5" />
         </button>
@@ -70,25 +80,25 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onC
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Product Name</label>
+          <label className="block text-sm font-medium text-[var(--on-surface-low)] mb-2">Product Name</label>
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleChange}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-[var(--border)] bg-[var(--bg-main)] text-[var(--on-surface)] rounded-lg focus:ring-2 focus:ring-[#BDF4FF] focus:border-transparent"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Supplier</label>
+          <label className="block text-sm font-medium text-[var(--on-surface-low)] mb-2">Supplier</label>
           <select
             name="supplierId"
             value={formData.supplierId}
             onChange={handleChange}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-[var(--border)] bg-[var(--bg-main)] text-[var(--on-surface)] rounded-lg focus:ring-2 focus:ring-[#BDF4FF] focus:border-transparent"
           >
             <option value="">Select a supplier</option>
             {suppliers.map(supplier => (
@@ -98,7 +108,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onC
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Cost Price (₹)</label>
+          <label className="block text-sm font-medium text-[var(--on-surface-low)] mb-2">Cost Price (₹)</label>
           <input
             type="number"
             name="price"
@@ -106,12 +116,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onC
             onChange={handleChange}
             required
             step="0.01"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-[var(--border)] bg-[var(--bg-main)] text-[var(--on-surface)] rounded-lg focus:ring-2 focus:ring-[#BDF4FF] focus:border-transparent"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Selling Price (₹)</label>
+          <label className="block text-sm font-medium text-[var(--on-surface-low)] mb-2">Selling Price (₹)</label>
           <input
             type="number"
             name="sellingPrice"
@@ -119,44 +129,44 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onC
             onChange={handleChange}
             required
             step="0.01"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-[var(--border)] bg-[var(--bg-main)] text-[var(--on-surface)] rounded-lg focus:ring-2 focus:ring-[#BDF4FF] focus:border-transparent"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Stock</label>
+          <label className="block text-sm font-medium text-[var(--on-surface-low)] mb-2">Stock</label>
           <input
             type="number"
             name="quantity"
             value={formData.quantity}
             onChange={handleChange}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-[var(--border)] bg-[var(--bg-main)] text-[var(--on-surface)] rounded-lg focus:ring-2 focus:ring-[#BDF4FF] focus:border-transparent"
           />
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+          <label className="block text-sm font-medium text-[var(--on-surface-low)] mb-2">Description</label>
           <textarea
             name="description"
             value={formData.description}
             onChange={handleChange}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-[var(--border)] bg-[var(--bg-main)] text-[var(--on-surface)] rounded-lg focus:ring-2 focus:ring-[#BDF4FF] focus:border-transparent"
           />
         </div>
 
-        <div className="md:col-span-2 flex justify-end space-x-3 pt-4 border-t border-gray-200">
+        <div className="md:col-span-2 flex justify-end space-x-3 pt-4 border-t border-[var(--border)]">
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+            className="px-4 py-2 text-[var(--on-surface)] border border-[var(--border)] rounded-lg hover:bg-[rgba(255,255,255,0.05)] transition-colors duration-200"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+            className="px-4 py-2 bg-[#BDF4FF] text-[#17004b] rounded-lg hover:bg-[#9BE8FF] transition-colors duration-200 shadow-sm"
           >
             {product ? 'Update Product' : 'Add Product'}
           </button>
