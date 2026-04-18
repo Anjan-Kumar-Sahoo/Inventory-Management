@@ -101,7 +101,7 @@ public class EmailService {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlBody, true);
-            helper.addInline("logoImage", new ClassPathResource("static/logo.png"));
+            helper.addInline("logoImage", new ClassPathResource("static/logo-white-bg.png"));
             mailSender.send(message);
         } catch (MessagingException ex) {
             throw new IllegalStateException("Failed to send email", ex);
