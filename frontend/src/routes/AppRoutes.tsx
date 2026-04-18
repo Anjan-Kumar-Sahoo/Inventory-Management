@@ -10,6 +10,7 @@ import { LoginPage } from '../pages/auth/LoginPage';
 import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage';
 import { ForgotPasswordOtpPage } from '../pages/auth/ForgotPasswordOtpPage';
 import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
+import { LandingPage } from '../pages/LandingPage';
 import { AppShell } from '../layouts/AppShell';
 import { useAuth } from '../context/AuthContext';
 import { GuestRoute, ProtectedRoute } from './RouteGuards';
@@ -28,7 +29,18 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ darkMode, onToggleTheme })
     <Routes>
       <Route
         path={ROUTES.ROOT}
-        element={<Navigate to={isAuthenticated ? ROUTES.APP.DASHBOARD : ROUTES.AUTH.LOGIN} replace />}
+        element={
+          isAuthenticated ? (
+            <Navigate to={ROUTES.APP.DASHBOARD} replace />
+          ) : (
+            <LandingPage
+              darkMode={darkMode}
+              onToggleTheme={onToggleTheme}
+              onGoToLogin={() => navigate(ROUTES.AUTH.LOGIN)}
+              onGoToRegister={() => navigate(ROUTES.AUTH.REGISTER)}
+            />
+          )
+        }
       />
 
       <Route
@@ -130,7 +142,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ darkMode, onToggleTheme })
 
       <Route
         path="*"
-        element={<Navigate to={isAuthenticated ? ROUTES.APP.DASHBOARD : ROUTES.AUTH.LOGIN} replace />}
+        element={<Navigate to={isAuthenticated ? ROUTES.APP.DASHBOARD : ROUTES.PUBLIC.LANDING} replace />}
       />
     </Routes>
   );

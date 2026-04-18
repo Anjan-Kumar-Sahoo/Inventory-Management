@@ -2,6 +2,9 @@ export type AppTab = 'dashboard' | 'products' | 'suppliers' | 'sell';
 
 export const ROUTES = {
   ROOT: '/',
+  PUBLIC: {
+    LANDING: '/',
+  },
   AUTH: {
     ROOT: '/auth',
     LOGIN: '/auth/login',

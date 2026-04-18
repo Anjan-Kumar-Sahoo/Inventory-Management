@@ -35,8 +35,8 @@ We have moved away from traditional spreadsheet-link designs. The system now fol
 ### 🖥️ Frontend (React)
 - **Root**: `src/App.tsx` (Provider composition only).
 - **Routing Layer**:
-  - `src/routes/AppRoutes.tsx`: Central route tree for guest/protected navigation.
-  - `src/routes/paths.ts`: Route constants + tab/path mapping.
+  - `src/routes/AppRoutes.tsx`: Central route tree for public, guest, and protected navigation.
+  - `src/routes/paths.ts`: Route constants + tab/path mapping (including public landing route).
   - `src/routes/RouteGuards.tsx`: Auth-based guest/protected guards.
 - **Layout Layer**:
   - `src/layouts/AppShell.tsx`: Protected app chrome (Header, Outlet, Footer).
@@ -49,6 +49,7 @@ We have moved away from traditional spreadsheet-link designs. The system now fol
   - `AuthContext`: Manages JWT sessions, user info, registration OTP flow, and forgot-password OTP reset flow state.
   - `InventoryContext`: Manages products, suppliers, and sales data.
 - **Key Pages**:
+  - `LandingPage.tsx`: Public marketing landing page with local-friendly copy, feature highlights, and auth CTAs.
   - `Dashboard.tsx`: Overview with key metrics.
   - `ProductManager.tsx`: Full CRUD for products.
   - `SupplierManager.tsx`: Full CRUD for suppliers.
@@ -162,6 +163,12 @@ We use atomic SQL updates for stock management to prevent race conditions during
 - [x] Expand backend runtime config with strict env-driven CORS, optional HTTPS enforcement, Redis-backed rate limiting, Hikari pooling, and actuator metrics exposure.
 - [x] Add validation constraints to inventory DTOs and controller request payloads for stronger API safety.
 - [x] Update root README with architecture diagram, env variables, deployment path, and one-command deploy flow.
+
+### 📅 Phase 12: Landing Page CRO + Mobile Optimization (Completed)
+- [x] Add responsive public landing page (`src/pages/LandingPage.tsx`) focused on local shopkeeper pain points.
+- [x] Keep top navbar aligned with app style and add Sign In/Register actions with a one-click theme toggle.
+- [x] Add high-converting sections: hero, 4-feature benefit grid, old-vs-new comparison, and final Start Free CTA.
+- [x] Update route defaults so unauthenticated users land on the public page while authenticated users go to dashboard.
 
 ---
 
