@@ -2,6 +2,66 @@ import React, { useState, useEffect } from 'react';
 import { IndianRupee, RefreshCw } from 'lucide-react';
 import { authFetch } from '../../context/api';
 
+function parseApiTimestamp(value: unknown): Date | null {
+  if (value == null) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  if (typeof value === 'number') {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  // Supports LocalDateTime array style: [year, month, day, hour, minute, second, nanos]
+  if (Array.isArray(value) && value.length >= 6) {
+    const [year, month, day, hour, minute, second, nanos] = value as number[];
+    const milliseconds = Math.floor((Number(nanos) || 0) / 1_000_000);
+    const date = new Date(Date.UTC(year, month - 1, day, hour, minute, second, milliseconds));
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  if (typeof value === 'string') {
+    const raw = value.trim();
+    if (!raw) {
+      return null;
+    }
+
+    // Backend LocalDateTime values can be zone-less; assume UTC for stable client-side rendering.
+    const hasTimezone = /(?:Z|[+\-]\d{2}:\d{2})$/.test(raw);
+    const normalized = hasTimezone ? raw : `${raw}Z`;
+
+    const firstTry = new Date(normalized);
+    if (!Number.isNaN(firstTry.getTime())) {
+      return firstTry;
+    }
+
+    const secondTry = new Date(raw);
+    return Number.isNaN(secondTry.getTime()) ? null : secondTry;
+  }
+
+  return null;
+}
+
+function formatTimestamp(value: unknown): string | null {
+  const date = parseApiTimestamp(value);
+  if (!date) {
+    return null;
+  }
+
+  return date.toLocaleString('en-IN', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+}
+
 export const ProfitDisplay: React.FC = () => {
   const [profit, setProfit] = useState<number>(0);
   const [lastReset, setLastReset] = useState<string | null>(null);
@@ -13,17 +73,8 @@ export const ProfitDisplay: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setProfit(data.profit);
-        if (data.timestamp) {
-          const resetDate = new Date(data.timestamp);
-          setLastReset(resetDate.toLocaleString('en-IN', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-          }));
-        }
+        const formattedTimestamp = formatTimestamp(data.timestamp);
+        setLastReset(formattedTimestamp);
       }
     } catch (error) {
       console.error('Error fetching profit:', error);
@@ -39,15 +90,8 @@ export const ProfitDisplay: React.FC = () => {
         setProfit(0);
         // Handle different possible timestamp formats from backend
         const timestamp = data.reset_timestamp || data.resetTimestamp || new Date().toISOString();
-        const resetDate = new Date(timestamp);
-        setLastReset(resetDate.toLocaleString('en-IN', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        }));
+        const formattedTimestamp = formatTimestamp(timestamp);
+        setLastReset(formattedTimestamp);
       }
     } catch (error) {
       console.error('Error resetting sales:', error);
