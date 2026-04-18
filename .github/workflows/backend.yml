@@ -78,7 +78,7 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
-            cd /opt/godown
+            cd "$HOME/GoDamm"
 
             if [ ! -f .env ]; then
               cp .env.example .env

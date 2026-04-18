@@ -152,7 +152,7 @@ We use atomic SQL updates for stock management to prevent race conditions during
 ### 📅 Phase 10: EC2 Single-Node Deployment Pack (Completed)
 - [x] Add `deploy/ec2-single-node/setup-ec2-4gb.sh` for package install, swap tuning, Docker/Compose setup, and Nginx/Certbot host prep.
 - [x] Add `docker-compose.yml` for backend + MySQL + Redis with persistent volumes and health checks.
-- [x] Add `deploy/ec2-single-node/inventory-backend.service` and `deploy/ec2-single-node/godown-stack.service` for managed Docker Compose startup.
+- [x] Add `deploy/ec2-single-node/inventory-backend.service` and `deploy/ec2-single-node/godamm-stack.service` for managed Docker Compose startup.
 - [x] Add `deploy/ec2-single-node/nginx-inventory.conf` for API-only reverse proxy on `api.godamm.mraks.dev` with HTTPS and security headers.
 - [x] Add `deploy/ec2-single-node/deploy-app.sh`, backend env template, and deployment README for repeatable publish flow.
 

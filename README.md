@@ -182,7 +182,7 @@ Quick path:
 
 ```bash
 sudo bash deploy/ec2-single-node/setup-ec2-4gb.sh
-cd /opt/godown
+cd ~/GoDamm
 cp deploy/ec2-single-node/backend.env.example .env
 nano .env
 bash deploy/ec2-single-node/deploy-app.sh

@@ -31,13 +31,13 @@ What it does:
 - Installs Docker, Docker Compose plugin, Nginx, Certbot, and UFW
 - Creates 4 GB swap and memory sysctl tuning
 - Opens ports 22/80/443/8080 in UFW
-- Clones or updates repository at /opt/godown
+- Clones or updates repository at /home/ubuntu/GoDamm
 - Copies .env.example to .env if missing
 
 ## 3) Configure environment
 
 ```bash
-cd /opt/godown
+cd ~/GoDamm
 cp deploy/ec2-single-node/backend.env.example .env
 nano .env
 ```
@@ -61,7 +61,7 @@ If using AWS RDS MySQL:
 ## 4) Start backend stack
 
 ```bash
-cd /opt/godown
+cd ~/GoDamm
 bash deploy/ec2-single-node/deploy-app.sh
 ```
 
@@ -90,9 +90,9 @@ sudo certbot --nginx -d api.godamm.mraks.dev
 ## 7) Optional auto-start with systemd
 
 ```bash
-sudo cp deploy/ec2-single-node/godown-stack.service /etc/systemd/system/godown-stack.service
+sudo cp deploy/ec2-single-node/godamm-stack.service /etc/systemd/system/godamm-stack.service
 sudo systemctl daemon-reload
-sudo systemctl enable --now godown-stack
+sudo systemctl enable --now godamm-stack
 ```
 
 ## 8) Health checks
@@ -100,7 +100,7 @@ sudo systemctl enable --now godown-stack
 ```bash
 curl -fsS http://127.0.0.1:8080/actuator/health
 curl -I https://api.godamm.mraks.dev/actuator/health
-docker compose -f /opt/godown/docker-compose.yml ps
+docker compose -f ~/GoDamm/docker-compose.yml ps
 free -h
 ```
 

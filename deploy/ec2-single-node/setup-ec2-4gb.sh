@@ -4,7 +4,7 @@ set -euo pipefail
 # Idempotent host bootstrap for a 4 GB Ubuntu EC2 VM using Docker Compose.
 SWAP_SIZE_GB="${SWAP_SIZE_GB:-4}"
 APP_USER="${APP_USER:-ubuntu}"
-APP_DIR="${APP_DIR:-/opt/godown}"
+APP_DIR="${APP_DIR:-/home/${APP_USER}/GoDamm}"
 REPO_URL="${REPO_URL:-https://github.com/Anjan-Kumar-Sahoo/GoDamm.git}"
 
 require_root() {
@@ -30,7 +30,7 @@ ensure_swap() {
     echo "/swapfile none swap sw 0 0" >> /etc/fstab
   fi
 
-  cat > /etc/sysctl.d/99-godown-memory.conf <<EOF
+  cat > /etc/sysctl.d/99-godamm-memory.conf <<EOF
 vm.swappiness=15
 vm.vfs_cache_pressure=60
 EOF

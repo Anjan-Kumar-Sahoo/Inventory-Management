@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/opt/godown}"
+APP_DIR="${APP_DIR:-$HOME/GoDamm}"
 
 require_non_root() {
   if [[ "${EUID}" -eq 0 ]]; then
