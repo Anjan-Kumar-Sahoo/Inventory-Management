@@ -8,9 +8,14 @@ import {
   VerifyOtpRequest,
 } from '../types/auth';
 
-const API_HOST =
-  import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.DEV ? 'http://localhost:8080' : window.location.origin);
+const API_HOST = (() => {
+  const configuredBase = import.meta.env.VITE_API_BASE_URL?.trim();
+  if (configuredBase) {
+    return configuredBase.replace(/\/+$/, '');
+  }
+
+  return import.meta.env.DEV ? 'http://localhost:8080' : window.location.origin;
+})();
 const API_BASE_URL = `${API_HOST}/api`;
 const AUTH_BASE_URL = `${API_HOST}/auth`;
 

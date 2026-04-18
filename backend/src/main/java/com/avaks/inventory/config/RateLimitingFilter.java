@@ -79,22 +79,13 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         String scope = path.startsWith("/auth") ? "auth" : "api";
         long requestLimit = "auth".equals(scope) ? authMaxRequestsPerWindow : maxRequestsPerWindow;
         String key = "rate_limit:" + scope + ":" + getClientIp(request);
+        Long currentCount;
 
         try {
-            Long currentCount = redisTemplate.opsForValue().increment(key);
+            currentCount = redisTemplate.opsForValue().increment(key);
             if (currentCount != null && currentCount == 1L) {
                 redisTemplate.expire(key, Duration.ofSeconds(windowSeconds));
             }
-
-            if (currentCount != null && currentCount > requestLimit) {
-                response.setStatus(429);
-                response.setContentType("application/json");
-                response.setHeader("Retry-After", String.valueOf(windowSeconds));
-                response.getWriter().write("{\"error\":\"Too many requests. Please retry later.\"}");
-                return;
-            }
-
-            filterChain.doFilter(request, response);
         } catch (Exception ex) {
             if (failOpen) {
                 LOGGER.warn("Rate limiter failed open for path {}: {}", path, ex.getMessage());
@@ -105,7 +96,18 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
             response.setContentType("application/json");
             response.getWriter().write("{\"error\":\"Rate limiter unavailable\"}");
+            return;
         }
+
+        if (currentCount != null && currentCount > requestLimit) {
+            response.setStatus(429);
+            response.setContentType("application/json");
+            response.setHeader("Retry-After", String.valueOf(windowSeconds));
+            response.getWriter().write("{\"error\":\"Too many requests. Please retry later.\"}");
+            return;
+        }
+
+        filterChain.doFilter(request, response);
     }
 
     private String getClientIp(HttpServletRequest request) {
