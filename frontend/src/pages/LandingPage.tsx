@@ -549,7 +549,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 }}
               >
                 <h3 className="text-lg font-black tracking-tight" style={{ color: 'var(--lp-final-panel-heading)' }}>
-                  Why shopkeepers switch
+                  Why users switch
                 </h3>
                 <ul className="mt-4 space-y-2.5 text-sm" style={{ color: 'var(--lp-final-panel-text)' }}>
                   <li className="flex items-start gap-2.5">

@@ -12,6 +12,12 @@ import { ForgotPasswordOtpPage } from '../pages/auth/ForgotPasswordOtpPage';
 import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
 import { LandingPage } from '../pages/LandingPage';
 import { AppShell } from '../layouts/AppShell';
+// PPT imports
+import PPTLayout from '../pages/ppt/PPTLayout';
+import Overview from '../pages/ppt/Overview';
+import Frontend from '../pages/ppt/Frontend';
+import Backend from '../pages/ppt/Backend';
+import Deployment from '../pages/ppt/Deployment';
 import { useAuth } from '../context/AuthContext';
 import { GuestRoute, ProtectedRoute } from './RouteGuards';
 import { ROUTES } from './paths';
@@ -27,6 +33,13 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ darkMode, onToggleTheme })
 
   return (
     <Routes>
+      {/* PPT Cinematic Architecture Route */}
+      <Route path="/ppt" element={<PPTLayout />}>
+        <Route index element={<Overview />} />
+        <Route path="frontend" element={<Frontend />} />
+        <Route path="backend" element={<Backend />} />
+        <Route path="deployment" element={<Deployment />} />
+      </Route>
       <Route
         path={ROUTES.ROOT}
         element={

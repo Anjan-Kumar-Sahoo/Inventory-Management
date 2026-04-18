@@ -165,7 +165,7 @@ We use atomic SQL updates for stock management to prevent race conditions during
 - [x] Update root README with architecture diagram, env variables, deployment path, and one-command deploy flow.
 
 ### 📅 Phase 12: Landing Page CRO + Mobile Optimization (Completed)
-- [x] Add responsive public landing page (`src/pages/LandingPage.tsx`) focused on local shopkeeper pain points.
+- [x] Add responsive public landing page (`src/pages/LandingPage.tsx`) focused on local user pain points.
 - [x] Keep top navbar aligned with app style and add Sign In/Register actions with a one-click theme toggle.
 - [x] Add high-converting sections: hero, 4-feature benefit grid, old-vs-new comparison, and final Start Free CTA.
 - [x] Update route defaults so unauthenticated users land on the public page while authenticated users go to dashboard.
