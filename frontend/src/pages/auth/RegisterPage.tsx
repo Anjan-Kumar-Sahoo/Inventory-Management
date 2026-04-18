@@ -46,6 +46,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ darkMode, onToggleTh
       title="Create Account"
       subtitle="Create your shop account in a few easy steps."
       darkMode={darkMode}
+      whiteLogoInDarkMode
       onToggleTheme={onToggleTheme}
     >
       <div className="mb-8">

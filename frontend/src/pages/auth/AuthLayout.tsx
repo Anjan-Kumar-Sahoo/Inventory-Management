@@ -6,11 +6,19 @@ interface AuthLayoutProps {
   title: string;
   subtitle: string;
   darkMode: boolean;
+  whiteLogoInDarkMode?: boolean;
   onToggleTheme: () => void;
   children: React.ReactNode;
 }
 
-export const AuthLayout: React.FC<AuthLayoutProps> = ({ title, subtitle, darkMode, onToggleTheme, children }) => {
+export const AuthLayout: React.FC<AuthLayoutProps> = ({
+  title,
+  subtitle,
+  darkMode,
+  whiteLogoInDarkMode = false,
+  onToggleTheme,
+  children,
+}) => {
   return (
     <div className="auth-shell min-h-screen bg-[var(--bg-main)] text-[var(--on-surface)] selection:bg-[var(--primary)] selection:text-white flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-500">
       {/* Dynamic Background Elements */}
@@ -31,7 +39,12 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ title, subtitle, darkMod
           </div>
 
           <div className="mb-6">
-            <img src="/logo-full.png" alt="GoDamm logo" className="w-80 h-auto object-contain" />
+            <img
+              src="/logo-full.png"
+              alt="GoDamm logo"
+              className="w-80 h-auto object-contain"
+              style={darkMode && whiteLogoInDarkMode ? { filter: 'brightness(0) saturate(100%) invert(100%)' } : undefined}
+            />
           </div>
           
           <h1 className="text-4xl font-black tracking-tight mb-3 text-[var(--on-surface)]">Inventory Management</h1>

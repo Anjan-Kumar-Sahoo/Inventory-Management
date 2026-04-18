@@ -40,6 +40,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       title="Login"
       subtitle="Use your email and password to open your shop dashboard."
       darkMode={darkMode}
+      whiteLogoInDarkMode
       onToggleTheme={onToggleTheme}
     >
       <div className="mb-8">

@@ -37,6 +37,7 @@ export const OtpVerificationPage: React.FC<OtpVerificationPageProps> = ({ darkMo
       title="OTP Verification"
       subtitle={`Enter the 6-digit OTP sent to ${pendingEmail || 'your email'} to continue.`}
       darkMode={darkMode}
+      whiteLogoInDarkMode
       onToggleTheme={onToggleTheme}
     >
       <div className="mb-10 text-center">
