@@ -1,4 +1,32 @@
 services:
+  mysql:
+    image: mysql:8.4
+    container_name: godamm-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-inventory_db}
+      MYSQL_USER: ${MYSQL_USER:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    command:
+      - --default-authentication-plugin=caching_sha2_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max_connections=80
+      - --innodb_buffer_pool_size=512M
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - godamm-network
+
   redis:
     image: redis:7.2-alpine
     container_name: godamm-redis
@@ -30,7 +58,7 @@ services:
     container_name: godamm-backend
     restart: unless-stopped
     env_file:
-      - ./backend/.env
+      - .env
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -39,6 +67,8 @@ services:
       REQUIRE_HTTPS: ${REQUIRE_HTTPS:-true}
       SERVER_PORT: 8080
     depends_on:
+      mysql:
+        condition: service_healthy
       redis:
         condition: service_healthy
     ports:
@@ -53,6 +83,7 @@ services:
       - godamm-network
 
 volumes:
+  mysql_data:
   redis_data:
 
 networks:
